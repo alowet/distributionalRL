@@ -10,7 +10,6 @@ import warnings
 import sys
 
 sys.path.append('../utils')
-from matio import loadmat
 from paths import raise_print, check_dir
 from db import get_db_info, on_cluster
 from plotting import validate_timestamps
