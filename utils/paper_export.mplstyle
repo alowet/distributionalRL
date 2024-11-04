@@ -1,0 +1,23 @@
+font.family : Arial
+font.size : 14
+pdf.fonttype : 42
+xtick.labelsize : 14
+ytick.labelsize : 14
+xtick.major.width: 1.5
+ytick.major.width: 1.5
+xtick.major.size : 5
+ytick.major.size : 5
+xtick.major.pad : 5
+ytick.major.pad : 5
+axes.titlesize : 14
+axes.labelsize : 14
+legend.title_fontsize: 14
+legend.fontsize: 14
+axes.linewidth : 1.5
+lines.markeredgewidth : 0.0
+figure.figsize : 3.0, 2.0
+legend.frameon : False
+savefig.transparent : True
+savefig.bbox : tight
+savefig.facecolor : (0,0,0,0)
+savefig.dpi : 300
