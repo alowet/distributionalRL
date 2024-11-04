@@ -1,14 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import glob
-import pickle
 from copy import copy
 import ScanImageTiffReader
 from skimage.color import rgb2hsv, hsv2rgb
 import subprocess
 from scipy import io
-from scipy.interpolate import interp1d
 import warnings
 import sys
 
@@ -134,88 +131,6 @@ def check_integrity(db_dict):
         if os.path.exists(this_path):
             subprocess.call(['rm', '-r', this_path])
 
-#
-# def get_imaging_session(beh_data_folder, day, time=None):
-# 	session = glob.glob(beh_data_folder + '/*' + day + '*.mat')
-# 	datafile_names = []
-# 	imaging_sessions = []
-# 	file_times = []
-# 	if len(session) == 0:
-# 		raise_print('Could not find mat files in ' + beh_data_folder)
-# 	for df in session:
-# 		converted_data = loadmat(os.path.join(beh_data_folder, df))
-# 		session_data = converted_data['SessionData']
-# 		# kludge from where this was called imaging
-# 		if 'imaging' in session_data:
-# 			session_data['has_imaging'] = session_data['imaging']
-# 		if session_data['has_imaging'] == 1:
-# 			# if Bpod gets funky, sometimes this is returned as an empty list instead of an int. If it freezes, the field doesn't exist at all
-# 			if 'quality' in session_data and isinstance(session_data['quality'], int):
-# 				datafile_names.append(df)
-# 				imaging_sessions.append(session_data)
-# 				if 'exp_time' in session_data:
-# 					file_times.append(session_data['exp_time'])
-# 				else:
-# 					file_times.append(session_data['file_time'])
-# 	if len(datafile_names) == 1:
-# 		return datafile_names[0], imaging_sessions[0]
-# 	elif len(datafile_names) > 1:
-# 		# figure out which (behavior) file_time is closest to (imaging) meta_time, and use that behavior file
-# 		which_session = np.argmin(np.abs([time - int(file_time) for file_time in file_times]))
-# 		return datafile_names[which_session], imaging_sessions[which_session]
-# 	else:
-# 		raise_print("Couldn't find imaging session on this day. Make sure Quality exists and image=1")
-
-
-def get_timestamps_failed_debug(session_data, n_trials, n_frames, exclude_tt):
-
-    timestamps = {'foreperiod': 1,  # seconds before stimulus start to plot
-                  'iti': 2,
-                  # seconds after reward to plot. In later versions of the protocol, this is called PostRew, not ITI
-                  'align': np.full(n_trials, np.nan),
-                  'trial_start': np.full(n_trials, np.nan),
-                  'trial_end': np.full(n_trials, np.nan),
-                  'trace': np.full(n_trials, np.nan),
-                  'stim': np.full(n_trials, np.nan),
-                  'fs': np.full(n_trials, np.nan)
-                  }
-
-    for i in range(n_trials):
-        timestamps['align'][i] = session_data['RawEvents']['Trial'][i].States.Foreperiod[-1]
-        timestamps['trial_start'][i] = session_data['TrialStartTimestamp'][i]
-        timestamps['trial_end'][i] = session_data['TrialEndTimestamp'][i]
-        timestamps['trace'][i] = session_data['RawEvents']['Trial'][i].States.Trace[-1] - \
-                                 session_data['RawEvents']['Trial'][i].States.Trace[0]
-        timestamps['fs'][i] = 1. / np.mean(np.diff(session_data['RawEvents']['Trial'][i].Events.BNC1High))
-        if session_data['TrialTypes'][i] - 1 not in exclude_tt:
-            stimulus_field = getattr(session_data['RawEvents']['Trial'][i].States,
-                                     'Stimulus' + str(session_data['TrialTypes'][i]) + 'Delivery')
-            timestamps['stim'][i] = stimulus_field[-1] - stimulus_field[0]
-        else:
-            timestamps['stim'][i] = np.nan
-
-        timestamps['avg_fs'] = np.mean(timestamps['fs'])
-        timestamps['bin'] = np.mean(1. / timestamps['fs'])
-        first_ttl_midpoint = (session_data['RawEvents']['Trial'][i].Events.BNC1High[0] +
-                             session_data['RawEvents']['Trial'][i].Events.BNC1Low[0]) / 2
-        timestamps['first_ttl_time'] = first_ttl_midpoint + session_data['TrialStartTimestamp'][0]
-        timestamps['frame_times'] = np.arange(n_frames) * np.mean(timestamps['bin']) + timestamps['first_ttl_time']
-
-    timestamps = validate_timestamps(timestamps)
-    return timestamps
-
-# def chunk_imaging_trials(session_data, n_trials, exclude_trials):
-#
-#     # for the full matrix, used for smoothing and average psth
-#     time_per_trial = timestamps['foreperiod'] + np.amax(timestamps['stim']) + np.amax(timestamps['trace']) + timestamps['iti']
-#     trial_timebase = np.arange(-timestamps['foreperiod'], time_per_trial - timestamps['foreperiod'], timestamps['bin'])
-#     # sample_timebase = np.arange(0, (time_per_trial / timestamps['bin']))
-#
-#     # interpolate times into samples, now aligned per trial
-#     # f = interp1d(trial_timebase, sample_timebase, kind='linear', assume_sorted=True)
-#     # preallocate for speed
-#     # spike_mat = np.zeros((n_trials, int(time_per_trial / timestamps['bin'])), dtype=bool)
-
 
 def get_timestamps(session_data, n_trials, n_trace_types, meta_fs=None, tiff_counts=None, fudge=0):
 
@@ -278,13 +193,7 @@ def get_timestamps(session_data, n_trials, n_trace_types, meta_fs=None, tiff_cou
 
                 # compute number of frames occurring between first imaging trial and start of the following trial
                 fs = 1. / np.mean(np.diff(getattr(session_data['RawEvents']['Trial'][i].Events, high)))
-                # TODO: VERIFY!
-                #                 fs = 1. / np.diff(getattr(session_data['RawEvents']['Trial'][i].Events, high))[-1]
-                #                 timestamps['tiff_starts'][i + 1] = (session_data['TrialStartTimestamp'][i + 1] - timestamps[
-                #                     'first_ttl_time']) * fs
-                #                 timestamps['tiff_starts'][i + 1] = len(getattr(session_data['RawEvents']['Trial'][i].Events, low)) + \
-                #                     (session_data['TrialStartTimestamp'][i + 1] - session_data['TrialStartTimestamp'][i + 1] - \
-                #                      getattr(session_data['RawEvents']['Trial'][i].Events, low)[-1]) * fs
+
                 timestamps['tiffs_per_trial'][i] = len(getattr(session_data['RawEvents']['Trial'][i].Events, low)) + \
                                                    (session_data['RawEvents']['Trial'][i].States.ITI[-1] + .02 - \
                                                     getattr(session_data['RawEvents']['Trial'][i].Events, low)[-1]) * fs
@@ -436,30 +345,6 @@ def count_scanimage_tiffs(video_dir, i_tiffs=None):
             reader.close()
 
     return np.array(tiff_lens), meta['scanimage.SI4.scanFrameRate']
-
-# def count_scanimage_tiffs_failed_debug(video_dir, i_tiffs=None):
-#     tiff_lens = []
-#     filenames = []
-#     for filename in os.listdir(video_dir):
-#         if filename.endswith('.tif'):
-#             filenames.append(filename)
-#     # os.listdir returns files in random order, which screws things up if you're not careful!
-#     if i_tiffs is None:
-#         for file in sorted(filenames):
-#             with ScanImageTiffReader.ScanImageTiffReader(os.path.join(video_dir, file)) as reader:
-#                 nframes = reader.shape()[0]
-#                 tiff_lens.append(nframes)
-#                 reader.close()
-#
-#     else:
-#         for i_tiff in i_tiffs:
-#             with ScanImageTiffReader.ScanImageTiffReader(os.path.join(video_dir, sorted(filenames)[i_tiff])) as reader:
-#                 nframes = reader.shape()[0]
-#                 tiff_lens.append(nframes)
-#                 reader.close()
-#
-#     n_tiffs = len(filenames)
-#     return tiff_lens, n_tiffs
 
 
 def get_temp_dir(db_dict, video_dir):

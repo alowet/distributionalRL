@@ -85,12 +85,6 @@ def plot_kernels(filts, conv_base_labels, regressor_labels, coefs, n_filts, filt
     chkdir(save_name)
     fig.savefig(save_name, dpi=300, bbox_inches='tight')
 
-# def plot_coefs(coefs, regressor_labels, save_name):
-# 	plt.figure(figsize=(20, 10))
-# 	n_regressors = len(regressor_labels)
-# 	plt.scatter(np.arange(n_regressors), coefs[1:])
-# 	plt.xticks(np.arange(0, n_regressors, 5), regressor_labels[::5], rotation=45)
-# 	plt.savefig(save_name, dpi=300, bbox_inches='tight')
 
 def plot_coefs(coefs, regressor_labels, save_name):
     plt.figure(figsize=(20, 10))

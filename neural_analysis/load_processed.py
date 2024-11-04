@@ -1,16 +1,11 @@
 import numpy as np
 import pandas as pd
-import hashlib
 import os
-from pathlib import Path
 import pickle
-import json
 from scipy import stats
 from scipy.interpolate import interp1d
 import sys
 import itertools
-from parallelize_correlations import parallelize_correlations
-from multiprocessing import Queue, Process, Manager
 import joblib
 import psutil
 from neuralUtils import *
@@ -114,17 +109,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
         timecourses[key]['psth'] = np.array([], dtype=np.float64).reshape(n, 0, n_psth_bins, n_splits)
         timecourses[key]['shuff'] = np.array([], dtype=np.float64).reshape(n_shuff, n, 0, n_psth_bins, n_splits)
 
-    # # for storing data
-    # timecourses = {
-    #     'cs': np.array([], dtype=np.float64).reshape(n_trial_types, 0, n_samps),  # will be n_trial_types x n_neurons x n_samps
-    #     'rew': np.array([], dtype=np.float64).reshape(len(rew_types), 0, n_samps),
-    #     'rpe': np.array([], dtype=np.float64).reshape(len(rpe_types), 0, n_samps),
-    #     'combo': np.array([], dtype=np.float64).reshape(len(combo_types), 0, n_samps)
-    # }
-    #
-    #
-    # neuron_psth = np.array([], dtype=np.float64).reshape(n_trial_types, 0, n_psth_bins, n_splits)  # 2 because it will be split between training and testing set
-    # shuff_neuron_psth = np.array([], dtype=np.float64).reshape(n_shuff, n_trial_types, 0, n_psth_bins, n_splits)
     high_tt_concat = np.array([], dtype=np.float64).reshape(n_splits, 0, n_samps)
 
     # n_trial_types x n_neurons x n_periods
@@ -205,17 +189,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
                    '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8',
                    '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
 
-    # bin_width = 0.5 # seconds
-    # bin_step = 0.1  # seconds
-    # per = np.mean(np.diff(std_time_full))
-    # bin_width_samples = int(round(bin_width / per))
-    # trial_dur = pcolor_time_full[-1] - pcolor_time_full[0]
-    # n_steps = int(round((trial_dur - bin_width)/ bin_step)) + 1
-    # tile_time = np.linspace(pcolor_time_full[0] + bin_width/2, pcolor_time_full[-1] - bin_width/2, n_steps)
-    # odor_step_ind = np.argmin(np.abs(tile_time - 0.5))  # from 0.25 - 0.75 seconds after odor delivery
-    # lt_step_ind = np.argmin(np.abs(tile_time - 2.75)) # Late trace: 0.5 - 0 seconds before reward delivery
-    # rew_step_ind = np.argmin(np.abs(tile_time - 3.5))  # from 0.25 - 0.75 seconds after reward delivery
-
     # load data
     for i_ret, ret in enumerate(rets):
 
@@ -257,15 +230,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
         # print(bpath)
         with open(bpath, 'rb') as f:
             bdata = pickle.load(f)
-
-        # bregexp = os.path.join(paths['behavior_fig_roots'][0], ret['name'], ret['file_date_id'], '*.p')
-        # bfiles = glob.glob(bregexp)
-        # if len(bfiles) == 1:
-        #     with open(bfiles[0], 'rb') as f:
-        #         bdata = pickle.load(f)
-        # else:
-        #     raise Exception(
-        #         'Too many behavior files for this mouse/day. Figure out a way to specify which is the recording session')
 
         lick_start_idx = np.argmin(np.abs(bdata['time'] - timestamps['stim'] - 1))
         lick_end_idx = np.argmin(np.abs(bdata['time'] - timestamps['stim'] - timestamps['trace']))
@@ -313,14 +277,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
         print('Total cells: {}; included cells: {}'.format(np.shape(activity)[0], n_cells))
         cells_per_sess[i_ret] = n_cells
         n_trials = np.shape(activity)[1]
-
-        # print(len(np.concatenate(data['trial_inds_all_types'])), len(np.concatenate(trial_type_inds)), n_trials)
-
-        # rather than a list, have a vector with the type of each trial. This EXCLUDES unexpected reward trials!
-        # these_trial_types = np.zeros(n_trials, dtype=np.int16)
-        # for i, x in enumerate(all_trial_type_inds):
-        #     these_trial_types[x] = i
-        # all_trial_types[i_ret] = these_trial_types
 
         neuron_info['names'].extend([ret['name']] * n_cells)
         neuron_info['file_dates'].extend([ret['file_date']] * n_cells)
@@ -429,13 +385,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
             all_spk_cnts = np.concatenate((all_spk_cnts, trial_spk_cnts), axis=1)
 
             trial_spk_combo_cnts = np.full((len(combo_types), n_cells, n_max_trials_per_type, n_psth_bins), np.nan)
-            # ms_combo_spks = np.full(
-            #     (len(combo_types), n_cells, n_max_trials_per_type, rew_on_full_ind - odor_on_full_ind), np.nan)
-            # for i_combo, combo in enumerate(combo_types):
-            #     trial_spk_combo_cnts[i_combo, :, :np.sum(combos == combo), :] = binned_spk_cnts[:, combos == combo, :]
-            #     ms_combo_spks[i_combo, :, :np.sum(combos == combo), :] = spks[:, combos == combo,
-            #                                                              odor_on_full_ind:rew_on_full_ind]
-            # combo_spk_cnts = np.concatenate((combo_spk_cnts, trial_spk_combo_cnts), axis=1)
 
             # save memory (and therefore time) by not doing combo ms
             for i_div, (n_types, these_spks) in enumerate(zip([n_trace_types], [ms_spks])):
@@ -469,21 +418,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
             # delete these (very large) variables from memory
             del spks, these_spks, interp_spks, random_bins, shuff_spks
 
-            # random_bins = np.arange(int((offset_bins * psth_bin_width) / bin_size), ms_spks.shape[3],
-            #                         trace_dur_inds).reshape(1, 1, 1, -1) + \
-            #               rng.choice(trace_dur_inds, size=(n_trace_types, n_cells, n_max_trials_per_type, 1))
-            # random_combo_bins = np.arange(int((offset_bins * psth_bin_width) / bin_size), ms_combo_spks.shape[3],
-            #                         trace_dur_inds).reshape(1, 1, 1, -1) + \
-            #               rng.choice(trace_dur_inds, size=(len(combo_types)-1, n_cells, n_max_trials_per_type, 1))
-            #
-            # mnemonic_mat_ds_inc = np.sum(
-            #     np.take_along_axis(ms_spks[:n_trace_types, :], random_bins, axis=3), axis=3) / (
-            #                                     random_bins.shape[3] * bin_size)
-            # mnemonic_mat_ds_combo_inc = np.sum(
-            #     np.take_along_axis(ms_combo_spks[:len(combo_types)-1, :], random_bins, axis=3), axis=3) / (
-            #                                     random_bins.shape[3] * bin_size)
-            # mnemonic_mat_ds_trial = np.concatenate((mnemonic_mat_ds_trial, mnemonic_mat_ds_inc), axis=1)
-
 
             # get means within windows of that trial-averaged trace, producing arrays n_trial_types x n_cells
             this_sess_means = np.zeros((n_trial_types, n_cells, n_periods))
@@ -511,12 +445,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
 
             del zF
 
-            # similar to this_sess_trial_means, get means within 500 ms windows of full trace
-            # tile_means = np.zeros((n_cells, n_trials, n_steps))
-            # for i_step in range(n_steps):
-            #     start_idx = int(round(bin_step * i_step / per))
-            #     end_idx = start_idx + bin_width_samples
-            #     tile_means[:, :, i_step] = np.sum(spks[:, :, start_idx:end_idx], axis=2) / bin_width
 
             # save for normalization later. will contain NaNs due to inclusion of unexpected reward trials!
             all_sess_trial_means[i_ret] = np.copy(this_sess_trial_means)
@@ -560,16 +488,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
                                                       axis=1)
             separated = np.concatenate((separated, sep), axis=0)
 
-            # check if it's in the neuron_regress table and significant
-            # query = execute_sql(
-            #     'SELECT * FROM neuron_regress WHERE name="{}" AND file_date="{}" ORDER BY i_cell ASC'.format(
-            #         ret['name'], ret['file_date']), paths['db'])
-            # these_sig_values = np.array([x['sig_value'] for x in query])
-            # sig_values = np.concatenate((sig_values, these_sig_values))
-
-        # get variance of these means across cells for each trial type
-    #         X_vars[:, i_ret, :] = np.var(this_sess_means, axis=1)
-
     if only_neuron_info:
         for key, val in zip(neuron_info.keys(), neuron_info.values()):
             if val and type(val[0]) == str:
@@ -584,18 +502,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
         cue_spk_cnts = np.stack([np.sum(all_spk_cnts[:n_trace_types, :, :, st:stop], axis=-1) for (st, stop) in psth_pairs],
                                 axis=-1)
 
-        # for enforcing consistency across trials, use coefficient of variation for now
-        # max_covar = 0.1
-        # # also enforce minimum avg (absolute) activity
-        # min_firing = 0.1
-
-        # cv = cell_stds/X_means
-        # cell_mask = np.logical_and(cv < max_covar, np.abs(X_means) > min_firing)
-
-        # make this all true for now, because I computed coefficient of variation across entire recording session,
-        # not across trials
-        # cell_mask = np.ones((n_trial_types, np.sum(cells_per_sess), n_periods), dtype=bool)
-
         # for difference
         min_diff = 0.2
         # diff_mask = np.abs(X_means[-1, :, main_comp_ind] - )
@@ -606,9 +512,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
         # trace_dur_corrs = {}
         corrs = {}
         corrs_seconds = {}
-        # manager = Manager()
-        # trace_dur_corrs = manager.dict()
-        # corrs = manager.dict()
 
         prerew_keys = ['mean', 'var', 'cvar', 'resid_mean', 'resid_var', 'resid_cvar']
         postrew_keys = ['rew', 'rpe']
@@ -655,18 +558,6 @@ def load_processed(table, activity_type, protocol, kwargs, rets, save_path, do_s
             # mean is okay here because binned is a rate already
             # late_trace_mean = np.mean(binned[:, trace_inds, et_stop_psth_ind:lt_psth_ind + 1, np.newaxis], axis=2)
             rewards = all_rewards[i_ret]
-
-            # p = Process(target=parallelize_correlations, args=(start_cell, end_cell, inds, trial_types, binned, trace_inds,
-            #                                                    trace_mean, corrs, trace_dur_corrs, prerew_keys,
-            #                                                    postrew_keys, protocol_info, rewards, cue_resps,
-            #                                                    cue_spk_cnts, all_scrambled_order, scrambled_cue_resps,
-            #                                                    scrambled_cue_spk_cnts, n_splits))
-            # p.start()
-            # p.join()
-
-            # parallelize_correlations(queue, start_cell, end_cell, inds, trial_types, binned, trace_inds, trace_mean, corrs,
-            #     trace_dur_corrs, prerew_keys, postrew_keys, protocol_info, rewards, cue_resps,
-            #     cue_spk_cnts, all_scrambled_order, scrambled_cue_resps, scrambled_cue_spk_cnts, n_splits)
 
             # correls without train/test split
             for use_corrs, use_binned in zip([corrs, corrs_seconds], [binned, binned_seconds]):

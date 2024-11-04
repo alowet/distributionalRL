@@ -1,8 +1,5 @@
-import os
-import matplotlib
-# matplotlib.use('Agg')
 import numpy as np
-from scipy.stats import zscore, sem, pearsonr
+from scipy.stats import zscore, sem
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 import os
@@ -12,13 +9,10 @@ from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 from matplotlib.backends.backend_pdf import PdfPages
 import cmocean
-import pickle
 from neuralUtils import *
 from suite2p.extraction import dcnv
-import time
 import warnings
 import subprocess
-import glob
 from PyPDF2 import PdfReader
 
 import sys
@@ -115,14 +109,7 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
             raise_print(
                 'Length of first TIFF was not equal to 1000. Are you sure this was acquired in continuous mode?')
         timestamps = get_timestamps(session_data, n_trials_behavior, n_trace_types, metadata_fs, fudge=fudge)
-        # plt.hist(np.diff(timestamps['tiff_starts']))
-        # plt.figure()
-        # plt.scatter(session_data['TrialStartTimestamp'], timestamps['tiff_starts'])
-        # print(pearsonr(session_data['TrialStartTimestamp'], timestamps['tiff_starts']))
-        # plt.figure()
-        # plt.scatter(session_data['TrialEndTimestamp'][:-1], timestamps['tiff_starts'][1:])
-        # print(pearsonr(session_data['TrialEndTimestamp'][:-1], timestamps['tiff_starts'][1:]))
-        # plt.show()
+
         n_trials = timestamps['last_trial'] - timestamps['first_trial']
         fill_val = 'extrapolate'
 
@@ -203,11 +190,6 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
         # subtract neuropil fluorescence
         Fout = Ftot - ops['neucoeff'] * Fneu
 
-        # baseline operation
-        # Fc = dcnv.preprocess(Fout, baseline=ops['baseline'], win_baseline=200, sig_baseline=5, fs=ops['fs'], prctile_baseline=ops['prctile_baseline'])
-        # Fc = dcnv.preprocess(Fout, baseline='constant_percentile', win_baseline=ops['win_baseline'],
-        #                      sig_baseline=ops['sig_baseline'], fs=ops['fs'], prctile_baseline=ops['prctile_baseline'])
-
         # declare variables now, for saving later
         spks_store = None
         spks_smooth = None
@@ -219,11 +201,6 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
             if deconv:  # equivalent to spks.npy
                 # I tested this with the baseline method used here; deconvolution works way better with the maximin
                 # method that is suite2p's default, as does zF
-                # this_activity = dcnv.oasis(F=Fc, batch_size=ops['batch_size'], tau=ops['tau'], fs=ops['fs'])
-                # if db_dict['continuous']:
-                #     this_activity = spks.copy()
-                # else:
-                #     continue  # don't try deconvolution if acquisition was not continuous
                 this_activity = spks.copy()  # do it regardless of continuous acquisition
                 this_smooth_activity = gaussian_filter1d(this_activity.astype(np.float64), sigma) * avg_fs
             elif i_deconv == 1:  # z-scored dF/F
@@ -252,16 +229,7 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
             start_times[np.isin(trial_types, exclude_tt)[timestamps['first_trial']:timestamps['last_trial']]] -= \
                 (timestamps['stim'] + timestamps['trace'])
 
-            # get the frame closest to the target end time, which is timestamps['iti'] seconds after reward onset
-            # this is in a timebase within a single trial, starting from 0
-            # end_times = timestamps['align'] + timestamps['stim_trial'] + timestamps['trace_trial'] + timestamps['iti']
-
             for i, i_trial in enumerate(range(timestamps['first_trial'], timestamps['last_trial'])):
-
-                # start_idx = (np.abs(timestamps['frame_midpoints'][i_trial] - start_times[i_trial])).argmin()
-                # end_idx = (np.abs(timestamps['frame_midpoints'][i_trial] - end_times[i_trial])).argmin()
-                # neural_timebase = timestamps['frame_midpoints'][i_trial][start_idx:end_idx + 1] - timestamps['align'][
-                #     i_trial]
 
                 # this should account for Unexpected Reward trials nicely, unless they are the very first trial, in
                 # which case I make them NaN
@@ -279,15 +247,6 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
                     activity[:, i, time < timestamps['stim'] + sigma_s*2] = np.nan
                     smooth_activity[:, i, time < timestamps['stim'] + sigma_s*2] = np.nan
 
-                # use 'nearest' interpolation to align these samples to the standard timebase
-                # F_all_cells_neural_timebase = this_activity[cell_inds, int(np.round(timestamps['tiff_starts'][i_trial] + start_inc)):int(np.round(timestamps['tiff_starts'][i_trial] + end_inc)) + 1]
-
-                # try:
-                #     # f = interp1d(neural_timebase, F_all_cells_neural_timebase, 'nearest', axis=1,
-                #     #              bounds_error=False)  # , fill_value='extrapolate'
-                #     activity[:, i, :] = f(time)
-                # except ValueError:  # the number of tiffs doesn't match up with the number recorded by bpod, e.g. b/c the PMTs shut off and I deleted the blanks
-                #     activity[:, i, :] = np.nan
 
             if deconv:
                 spks_store = activity.copy()
@@ -310,7 +269,6 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
 
                 if not deconv:  # replot deconv using shading
                     if np.all([os.path.isfile(pdfname_tosave + x + '.pdf') for x in suffixes]):
-                        # and np.all([time.strptime(time.ctime(os.path.getmtime(pdfname_tosave + x + '.pdf'))) >= time.strptime('20231006', '%Y%m%d') for x in suffixes]):
                         print('File exists and is recent')
                         if np.all([check_file(pdfname_tosave + x + '.pdf') for x in suffixes]):
                             print('File is valid. Skipping {} for channel {}, mouse {}, day {}'.format(
@@ -375,13 +333,6 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
 
                         ax.set_clip_on(False)
                         ax.axis('off')
-                        # joining the x-axes forces the x labels to be the same, so just turn this all off and label Trials
-                        # by hand
-                        # ax.set_ylabel('Trials')
-                        # ax.set_yticks([])
-                        # ax.set_xticks([])
-                        # ax.spines['bottom'].set_color('none')
-                        # ax.spines['left'].set_color('none')
                         if deconv:
                             ax.axvspan(0, 1,  alpha=.5, facecolor=(.8, .8, .8), label='_nolegend_')
                         else:

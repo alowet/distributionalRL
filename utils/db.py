@@ -30,61 +30,24 @@ def on_cluster():
 
 
 def get_db_info():
-	ON_CLUSTER = on_cluster()
-	if ON_CLUSTER:
-		paths = {'db': '/n/home06/alowet/dist-rl/session_log.sqlite',
-					# 'db': '/n/holyscratch01/uchida_lab/alowet/session_log.sqlite',
-					'config': '/n/home06/alowet/dist-rl/session_log_config.json',
-					'home_root': '/n/home06/alowet/dist-rl/data',
-					# 'all_behavior_roots': ['/n/holystore01/LABS/uchida_users/Users/alowet/not2P-behavior',
-					# 						'/n/holystore01/LABS/uchida_users/Users/alowet/2P-behavior',
-					# 						'/n/holystore01/LABS/uchida_users/Users/alowet/NPX-behavior'],
-		            'behavior_root': '/n/holystore01/LABS/uchida_users/Users/alowet/behavior',
-					# 'imaging_behavior_root': '/n/holystore01/LABS/uchida_users/Users/alowet/2P-behavior',
-		            # 'ephys_behavior_root': '/n/holystore01/LABS/uchida_users/Users/alowet/NPX-behavior',
-					'imaging_root': '/n/holystore01/LABS/uchida_users/Users/alowet/2P-microscope',
-					'pupil_root': '/n/holystore01/LABS/uchida_users/Users/alowet/2P-camera',
-					'behavior_fig_roots': ['/n/holystore01/LABS/uchida_users/Users/alowet/dist-rl/behavior-plots',
-										   '/n/home06/alowet/dist-rl/behavior-plots'],
-					'neural_fig_roots': ['/n/holystore01/LABS/uchida_users/Users/alowet/dist-rl/neural-plots',
-										  '/n/home06/alowet/dist-rl/neural-plots'],
-					'ephys_root': '/n/holystore01/LABS/uchida_users/Users/alowet/ephys',
-					'facemap_root': '/n/holystore01/LABS/uchida_users/Users/alowet/camera',
-					'brainglobe_dir': '/n/holystore01/LABS/uchida_users/Users/alowet/.brainglobe'
-				}
-	else:
-		paths = {'db': '/mnt/clusterhome/dist-rl/session_log.sqlite',
-					'config': '/mnt/clusterhome/dist-rl/session_log_config.json',
-					'home_root': '/mnt/clusterhome/dist-rl/data',
-					# 'all_behavior_roots': ['/mnt/ssd2/dist-rl/data/behavior'],
-					'behavior_root': '/mnt/ssd2/dist-rl/data/behavior',
-		            # 'imaging_behavior_root': '/mnt/ssd2/dist-rl/data/behavior',
-                    # 'ephys_behavior_root': '/mnt/ssd2/dist-rl/data/behavior',
-					'imaging_root': '/mnt/ssd2/dist-rl/data/imaging',
-					'pupil_root': '/mnt/ssd2/dist-rl/data/pupil',
-					'behavior_fig_roots': ['/mnt/hdd1/dist-rl/behavior-plots',
-					                       '/mnt/clusterhome/dist-rl/behavior-plots'],
-					'neural_fig_roots': ['/mnt/hdd1/dist-rl/neural-plots',
-										'/mnt/clusterhome/dist-rl/neural-plots'],
-					'ephys_root': '/mnt/hdd1/ephys',
-					'facemap_root': '/mnt/ssd2/camera',
-					'brainglobe_dir': '/home/adam/.brainglobe'
-				}
+    paths = {'db': '../data/session_log.sqlite',
+                'config': '../data/session_log_config.json',
+                'home_root': '../data',
+                'behavior_root': '../data/behavior',
+                'imaging_root': '../data/imaging',
+                'pupil_root': '../data/data/pupil',
+                'behavior_fig_roots': ['../behavior-plots',
+                                       '../data/behavior-plots'],
+                'neural_fig_roots': ['../data/neural-plots',
+                                    '../data/neural-plots'],
+                'ephys_root': '../data/ephys',
+                'facemap_root': '../data/camera',
+                'brainglobe_dir': '../.brainglobe'
+            }
 
-	# paths['remote_imaging_behavior_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/2P-behavior'
-	# paths['remote_ephys_behavior_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/NPX-behavior'
-	paths['remote_imaging_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/2P-microscope'
-	paths['remote_behavior_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/behavior'
-	paths['remote_ephys_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/ephys'
-	paths['remote_facemap_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/camera'
-	paths['remote_pupil_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/2P-camera'
-	paths['remote_neural_fig_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/dist-rl/neural-plots'
-	paths['remote_behavior_fig_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/dist-rl/behavior-plots'
+    for key in ['behavior', 'imaging', 'ephys', 'facemap', 'pupil', 'behavior_fig', 'neural_fig']:
+        paths['_'.join(['remote', key, 'root'])] = paths['_'.join([key, 'root'])]
 
-	paths['mysql'] = {'host': 'rcdb-user.rc.fas.harvard.edu',
-					  'name': 'alowet',
-					  'user': 'alowet',
-					  'password': 'd72f4T6Xwz!1te'}
 	return paths
 
 

@@ -1,16 +1,12 @@
 import numpy as np
 import numpy.matlib
-from sklearn.model_selection import train_test_split, GroupShuffleSplit
-from sklearn.preprocessing import SplineTransformer, QuantileTransformer
-import pandas as pd
+from sklearn.model_selection import GroupShuffleSplit
 import tensorflow as tf
 import pickle
-import matplotlib
 import matplotlib.pyplot as plt
 
 from scipy import stats, ndimage
 import dill
-from copy import deepcopy
 import cmocean
 import time
 from datetime import datetime
@@ -24,7 +20,6 @@ import glm_class as glm
 sys.path.append('../utils')
 from paths import *
 from db import select_db, get_db_info, execute_sql, insert_into_db, NumpyEncoder
-from matio import loadmat
 from protocols import load_params
 
 from streams import extract_data_streams
@@ -231,11 +226,6 @@ def regress_session(name, file_date, file_date_id, meta_time=None, table='ephys'
                                  (name, file_date, lr, json.dumps(lambda_series, cls=NumpyEncoder), reg, se_frac, l1_ratio, to_drop), unique=False)
         print('all_in_db len', len(all_in_db), 'dropped_in_db len', len(dropped_in_db))
 
-        # print(len(dropped_in_db))
-        # print(pickle_path)
-        # print(os.path.isfile(pickle_path))
-        # print(not refit)
-
         if len(dropped_in_db) > 0 and os.path.isfile(pickle_path) and not refit:  # this can happen e.g. if the job gets requeued
         # if os.path.isfile(pickle_path) and not refit:  # this can happen e.g. if the job gets requeued
             # print('Session already fit {} with learning rate {}. Skipping.'.format(to_drop, lr))
@@ -247,9 +237,6 @@ def regress_session(name, file_date, file_date_id, meta_time=None, table='ephys'
             print('Found ' + pickle_path)
             with open(pickle_path, 'rb') as f:
                 model = dill.load(f)
-            # bring loaded variables into namespace
-            # for var in container.keys():
-            #     exec("{} = container['{}']".format(var, var))
 
         else:
             if 'reward' not in to_drop:

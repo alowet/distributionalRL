@@ -1,0 +1,8 @@
+
+
+function out = foovar(rate, trials, reps)
+
+
+
+for r = 1:reps
+    x = rand(

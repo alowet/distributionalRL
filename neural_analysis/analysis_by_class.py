@@ -5,7 +5,6 @@ from matplotlib.colors import LinearSegmentedColormap
 import cmocean
 import seaborn as sns
 from scipy import stats
-from scipy.stats import special_ortho_group
 import pandas as pd
 import pingouin as pg
 from statsmodels.formula.api import ols, mixedlm
@@ -73,10 +72,6 @@ def compute_sig_frac_by_class(class_name, class_labels, corrs, neuron_info, corr
                 this_class = corrs[key][class_name][to_ord][class_label]
                 this_class = setup_sig_frac(this_class, class_name, class_label, neuron_info, inds, this_ord, n_psth_bins)
 
-                # if 'all' in class_label.lower(): class_inds = inds
-                # else: class_inds = np.logical_and(neuron_info[class_name] == class_label, inds)
-                # this_class = compute_sig_frac(this_class, class_inds, this_ord, n_psth_bins)
-
                 # compute fraction in each mouse
                 for mouse_name in np.unique(neuron_info['names']):
 
@@ -85,13 +80,6 @@ def compute_sig_frac_by_class(class_name, class_labels, corrs, neuron_info, corr
                     this_class = setup_sig_frac(this_class, class_name, class_label, neuron_info, inds, this_ord,
                                                 n_psth_bins, sub_name='names', sub_label=mouse_name)
 
-                    # if 'all' in class_label.lower():
-                    #     class_inds = np.logical_and(neuron_info['names'] == mouse_name, inds)
-                    # else:
-                    #     class_inds = np.logical_and.reduce([neuron_info[class_name] == class_label,
-                    #                                         neuron_info['names'] == mouse_name, inds])
-                    # this_class = compute_sig_frac(this_class, class_inds, this_ord, n_psth_bins)
-
                     # compute fraction in each session
                     for fig_path in np.unique(neuron_info.loc[neuron_info['names'] == mouse_name, 'fig_paths']):
 
@@ -99,11 +87,6 @@ def compute_sig_frac_by_class(class_name, class_labels, corrs, neuron_info, corr
                         this_class = corrs[key][class_name][to_ord][class_label][mouse_name][fig_path]
                         this_class = setup_sig_frac(this_class, class_name, class_label, neuron_info, inds, this_ord,
                                                     n_psth_bins, sub_name='fig_paths', sub_label=fig_path)
-
-                        # if 'all' in class_label.lower(): class_inds = np.logical_and(neuron_info['fig_paths'] == fig_path, inds)
-                        # else: class_inds = np.logical_and.reduce([neuron_info[class_name] == class_label,
-                        #                                           neuron_info['fig_paths'] == fig_path, inds])
-                        # this_class = compute_sig_frac(this_class, class_inds, this_ord, n_psth_bins)
 
     return corrs
 
@@ -268,20 +251,6 @@ def compute_sig_frac_sess_df(use_corrs, use_bin_centers, use_keys, class_name, c
                                 [use_corrs[key]['str_regions'][which_ord]['All Subregions'][mouse_name][fig_path][sign]
                                  for fig_path in incl_fig_paths]) * 100  # (n_mice, n_time_bins)
                             time_dict['fracs'].extend(fracs.flatten())
-
-                            # class_fracs = np.array(
-                            #     [tmp[fig_path][sign] for fig_path in incl_fig_paths]) * 100  # (n_mice, n_time_bins)
-                            # per_class_fracs = np.mean(class_fracs[:, start_ind:end_ind], axis=1)
-                            # per_shuff_fracs = np.mean(shuff_fracs[:, start_ind:end_ind], axis=1)
-                            # frac_dict['fracs'].extend(per_class_fracs - per_shuff_fracs)
-
-                            # frac_dict['names'].extend([mouse_name] * n_sess)
-                            # frac_dict['fig_paths'].extend(incl_fig_paths)
-                            # # frac_dict['fracs'].extend(np.mean(fracs[:, start_ind:end_ind], axis=1))
-                            # frac_dict['shuff'].extend([which_ord] * n_sess)
-                            # frac_dict['keys'].extend([key] * n_sess)
-                            # frac_dict['sign'].extend([sign] * n_sess)
-                            # frac_dict[class_name].extend([class_label] * n_sess)
 
                         time_dict['names'].extend([mouse_name] * n_sess * n_time * n_ord)
                         time_dict['fig_paths'].extend(np.tile(np.repeat(incl_fig_paths, n_time), n_ord))
@@ -508,20 +477,7 @@ def plot_sig_frac_mouse_by_class(class_name, class_labels, corrs, trace_dict, co
 
     # print(lt_start_ind, lt_end_ind)
     corr_name = 'corrs' if lt_end_ind - lt_start_ind > 1 else 'corrs_seconds'
-    # # print(corr_name)
-    #
-    # # rew_end_ind = np.argmin(np.abs(psth_bin_centers - bin_width/2 - rew_end))
-    #
-    # # print(lt_start_ind, lt_end_ind)
-    #
-    # n_plots_per_class = 2
-    #
-    # hue_kwargs = dict(x='shuff', y='lt_fracs', hue='mouse', hue_order=mouse_colors.keys(), palette=mouse_colors,
-    #                   zorder=0, legend=False)
-    # mean_kwargs = dict(x='shuff', y='lt_fracs', color='k', errwidth=4, estimator='mean', errorbar=('ci', 95),
-    #                    linestyles='')
-    #
-    # rel_classes = ['VP', 'mAcbSh', 'lAcbSh'] if class_name == 'str_regions' else [class_labels[0]]
+
     prerew_keys = ['mean', 'nolick_mean', 'resid_mean', 'var', 'resid_var']
 
     for i_key, key in enumerate(corr_keys):
@@ -556,34 +512,9 @@ def plot_sig_frac_mouse_by_class(class_name, class_labels, corrs, trace_dict, co
                 shuff_fracs = np.array([corrs[key][class_name]['scram'][class_label][mouse_name][sign] for mouse_name in
                                         incl_mouse_names]) * 100  # (n_mice, n_time_bins)
 
-                # ax = axs[i_cl * n_plots_per_class]
-                # setUpLickingTrace(trace_dict, ax=ax, override_ylims=True)
-                # if mouse_colors is not None:
-                #     ax.set_prop_cycle(cycler(
-                #         color=[v for k, v in zip(mouse_colors.keys(), mouse_colors.values()) if k in incl_mouse_names]))
-                # elif class_colors is not None:
-                #     ax.set_prop_cycle(cycler(color=class_colors))
-                #
+
                 if len(class_fracs) > 0:
-                #     ax.plot(psth_bin_centers, class_fracs.T, lw=1, zorder=20)
-                #
-                #     for fracs, ls, alpha in zip([class_fracs, shuff_fracs], ['solid', 'dashed'], [.2, .1]):
-                #         time_means = np.mean(fracs, axis=0)
-                #         time_cis = stats.sem(fracs, axis=0) * 1.96
-                #         ax.plot(psth_bin_centers, time_means, color='k', lw=3, ls=ls, zorder=30)
-                #         ax.fill_between(psth_bin_centers, time_means - time_cis, time_means + time_cis, color='k',
-                #                         alpha=alpha, zorder=1)
-                #
-                #     ax.set_title(title_dict[key] + ' ' + class_label)
-                #     if i_cl == 0:
-                #         ax.set_ylabel('Percent of\nsignificant {} cells (%)'.format(sign))
-                #     else:
-                #         ax.set_ylabel('')
-                #     # if i_key == len(corr_keys) - 1 and i_sign == 2:
-                #     # if i_cl == len(corr_keys) // 2:
-                #     ax.set_xlabel('Time from CS (s)')
-                #
-                #     ax = axs[i_cl * n_plots_per_class + 1]
+
                     if key in prerew_keys:
                         lt_class_fracs = np.mean(class_fracs[:, lt_start_ind:lt_end_ind], axis=1)
                         lt_shuff_fracs = np.mean(shuff_fracs[:, lt_start_ind:lt_end_ind], axis=1)
@@ -603,106 +534,6 @@ def plot_sig_frac_mouse_by_class(class_name, class_labels, corrs, trace_dict, co
                     # frac_dict['keys'].extend([key] * n_mice)
                     frac_dict['sign'].extend([sign] * n_mice)
                     frac_dict[class_name].extend([class_label] * n_mice)
-
-        #             sns.lineplot(df, ax=ax, **hue_kwargs)
-        #             sns.pointplot(df, ax=ax, **mean_kwargs)
-        #             ax.set_xticklabels(['ordered', 'shuffled'], rotation=45, ha='right', rotation_mode='anchor')
-        #             ax.set_xlabel('')
-        #
-        #             try:
-        #                 # wilcox, pvalue = stats.wilcoxon(lt_class_fracs, lt_shuff_fracs)
-        #                 stat, pvalue = stats.ttest_rel(lt_class_fracs, lt_shuff_fracs)
-        #                 # print(pvalue)
-        #                 # print(lt_class_fracs - lt_shuff_fracs)
-        #                 # tmp, tmpp = stats.ttest_1samp(lt_class_fracs - lt_shuff_fracs, 0)
-        #                 # print(tmpp)
-        #             except ValueError:  # e.g. for reward correlation this is nonsensical
-        #                 pvalue = 1
-        #             print(class_label, 'ordered - shuffled', sign, key)
-        #             print(pvalue)
-        #             print(np.mean(np.array(lt_class_fracs) - np.array(lt_shuff_fracs)))
-        #             print(stats.sem(np.array(lt_class_fracs) - np.array(lt_shuff_fracs)))
-        #             plot_stars(ax, [0.5], [pvalue])
-        #             indiv_ps[i_cl] = pvalue
-        #
-        #             all_class_frac_diffs.append(lt_class_fracs - lt_shuff_fracs)
-        #
-        #             diff_data = {'lt_diff': lt_class_fracs - lt_shuff_fracs, 'mouse': incl_mouse_names,
-        #                          class_name: [class_label] * len(incl_mouse_names)}
-        #             if class_name == 'str_regions':
-        #                 for rel_class in rel_classes:
-        #                     diff_data[rel_class] = [i_cl] * len(incl_mouse_names) if class_label != rel_class else [-1] * len(
-        #                         incl_mouse_names)
-        #             diff_df = pd.DataFrame(diff_data)
-        #             all_diff = pd.concat([all_diff, diff_df])
-        #             # centers.append(i_cl)
-        #
-        #     # # if len(class_labels) == 2:
-        #     # #     try:
-        #     # #         # wilcox, pvalue = stats.wilcoxon(*all_class_frac_diffs)
-        #     # #         # print(sign, key, wilcox, pvalue)
-        #     # #         if all([incl_mouse_names_all[0] == x for x in incl_mouse_names_all]):
-        #     # #             stat, pvalue = stats.ttest_rel(*all_class_frac_diffs)
-        #     # #         else:
-        #     # #             print('Independent')
-        #     # #             stat, pvalue = stats.ttest_ind(*all_class_frac_diffs)
-        #     # #     except ValueError:
-        #     # #         print('Could not do comparison')
-        #     #
-        #     # # if i_sign == 2:
-        #     # # ax.legend(labels=class_labels, loc=(1.04, 0))
-        #     # plt.suptitle(title_dict[key])
-        #     # # plt.tight_layout(rect=[0, .03, 1, 0.95])
-        #     # hide_spines()
-        #     # [plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
-        #     #     [protocol, class_name, 'sig_fracs', sign, key, str(len(psth_bin_centers)), 'bins', *class_labels, corr_name, activity_type]) + fformat),
-        #     #              bbox_inches='tight', dpi=300) for fformat in ['.pdf', '.svg', '.png']]
-        #     # # plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
-        #     # #     [class_name, 'sig_fracs', sign, key, str(len(psth_bin_centers)), 'bins', *class_labels]) + '.png'), bbox_inches='tight')
-        #
-        #     ax = summ_axs[i_sign]
-        #     sns.pointplot(data=all_diff, x=class_name, order=class_labels, y='lt_diff', errwidth=4, estimator='mean',
-        #                   errorbar=('ci', 95), linestyles='', palette=class_colors, ax=ax)
-        #     plt.setp(ax.collections, zorder=100, label="")
-        #     plt.setp(ax.lines, zorder=100, alpha=.5, label="")
-        #     sns.swarmplot(data=all_diff, x=class_name, order=class_labels, y='lt_diff', hue='mouse',
-        #                   palette=mouse_colors, ax=ax)
-        #     ax.set_ylabel('Sig. {} cells:\nData $-$ Shuffle (%)'.format(sign))
-        #     ax.axhline(y=0, ls='--', color='k')
-        #     ax.legend().remove()
-        #     ax.set_xlabel('')
-        #
-        #     if key in prerew_keys:
-        #         plot_stars_mouse_by_class(all_diff, ax, rel_classes, class_name, 'lt_diff', 'mouse')
-        #         # for i_rc, rel_class in enumerate(rel_classes):
-        #         #     # print(all_diff[rel_class])
-        #         #     # print(-1 in all_diff[rel_class].values)
-        #         #     if class_name == 'str_regions' and -1 in all_diff[rel_class].values:
-        #         #         formula = 'lt_diff ~ C({})'.format(rel_class)
-        #         #         model = mixedlm(formula, all_diff, groups='mouse')
-        #         #         mfit = model.fit(method=['powell', 'lbfgs'], maxiter=2000)
-        #         #         centers = np.unique(all_diff[rel_class])
-        #         #         # print(mfit.summary())
-        #         #         pvals = mfit.summary().tables[1][-len(centers):-1]['P>|z|'].values
-        #         #         pvals = [np.float64(x) if x != '' else 1. for x in pvals]
-        #         #         centers = np.delete(centers, 0)  # class_labels.index(rel_class))
-        #         #         # print(mfit.summary())
-        #         #         # print(pvals)
-        #         #         # print(centers)
-        #         #         plot_stars(ax, centers, pvals, ytop_scale=1.1 + .1 * i_rc)
-        #         plot_stars(ax, np.arange(len(class_labels)), indiv_ps)
-        #
-        # # plt.tight_layout(rect=[0, .03, 1, 0.95])
-        # summ_fig.suptitle(title_dict[key])
-        # hide_spines()
-        # [summ_fig.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
-        #     ['summary', protocol, class_name, 'sig_fracs', key, str(len(psth_bin_centers)), 'bins', *class_labels, corr_name, activity_type]) + fformat),
-        #                   bbox_inches='tight', dpi=300)
-        #  for fformat in ['.pdf', '.svg', '.png']]
-        # # summ_fig.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
-        # #     ['summary', class_name, 'sig_fracs', key, '_'.join(class_labels)]) + '.png'), bbox_inches='tight', dpi=300)
-        # # summ_fig.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
-        # #     ['summary', class_name, 'sig_fracs', key, '_'.join(class_labels)]) + '.svg'), bbox_inches='tight')
 
         frac_df = pd.DataFrame(frac_dict)
         trim_sign_labels = ['Positive', 'Negative']
@@ -766,32 +597,6 @@ def plot_sig_frac_mouse_by_class(class_name, class_labels, corrs, trace_dict, co
         [plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join([
             protocol, key, class_name, 'sig_fracs', 'sign', *sign_labels, corr_name, activity_type]) + fformat), bbox_inches='tight', dpi=300)
          for fformat in ['.pdf', '.svg', '.png']]
-
-
-# def plot_dist_cells_mouse_by_class(class_name, class_labels, neuron_info, cutoff, class_colors=None, mouse_colors=None, min_size=40):
-#
-#     cut_key = 'cutoff_' + str(cutoff)
-#     null_key = 'null_' + str(cutoff)
-#
-#     dist_cell_df = neuron_info.groupby(['names', class_name]).agg({cut_key: 'mean', null_key: 'mean'})
-#     print(dist_cell_df)
-#     dist_cell_df['diff'] = (dist_cell_df[cut_key] - dist_cell_df[null_key]) * 100
-#
-#     ax = sns.pointplot(data=dist_cell_df, x=class_name, order=class_labels, y='diff', errwidth=4, estimator='mean',
-#                   errorbar=('ci', 95), linestyles='', palette=class_colors)
-#     plt.setp(ax.collections, zorder=100, label="")
-#     plt.setp(ax.lines, zorder=100, alpha=.5, label="")
-#     sns.swarmplot(data=dist_cell_df, x=class_name, order=class_labels, y='diff', hue='mouse',
-#                   palette=mouse_colors, ax=ax)
-#     ax.set_ylabel('Sig. distribution-coding\ncells:\nData $-$ Shuffle (%)')
-#     ax.axhline(y=0, ls='--', color='k')
-#     ax.legend().remove()
-#     ax.set_xlabel('')
-#
-#     # plot_stars_mouse_by_class(dist_cell_df, ax, rel_classes, class_name, class_labels)
-#
-#     # indiv_ps = []
-#     # plot_stars(ax, np.arange(len(class_labels)), indiv_ps)
 
 
 def plot_stars_mouse_by_class(df, ax, rel_classes, class_name, depvar, groups, do_print=False):
@@ -1128,39 +933,10 @@ def decode_by_class_helper(use_dict, all_sids, bool_inds, grp, pop_sizes, n_spli
                 grp['resps'][key][:, bool_inds], all_sids[bool_inds], pop_sizes=pop_sizes,
                 n_splits=n_splits, train_per=train_per, test_per=test_per, kern=kern, reg_C=reg_C, do_zscore=do_zscore)
 
-
-            # print(use_dict[key][per_key][2])  # indices of samples cells within bool_inds
-
-        # plt.figure(fnum)
-        # plt.legend(grp['keys'], fontsize=16, loc=(1.04, 0), frameon=False)
-        # plt.title(save_string)
-        # plt.savefig('neural_decoding/{}_{}_iper_{}.pdf'.format(save_string, grp['name'], per))
-        # plt.savefig('neural_decoding/{}_{}_iper_{}.png'.format(save_string, grp['name'], per))
-        # plt.show()
-
         use_dict['pop_sizes'] = pop_sizes
 
     return use_dict
 
-#
-# def simul_decode_by_class_helper(use_dict, bool_inds, grp, save_string, fnum):
-#     for i_per, per in enumerate(grp['pers']):
-#         fnum += 1
-#         for i_key, key in enumerate(grp['keys']):
-#             if i_per == 0:
-#                 use_dict[key] = {}
-#             use_dict[key][per], _, _ = simultaneous_decode(grp['resps'][key][:, bool_inds][..., per], fnum, color=grp['colors'][i_key])
-#
-#         plt.figure(fnum)
-#         plt.legend(grp['keys'], fontsize=16, loc=(1.04, 0), frameon=False)
-#         plt.title(save_string)
-#         plt.savefig('neural_decoding/{}_{}_iper_{}.pdf'.format(save_string, grp['name'], per))
-#         plt.savefig('neural_decoding/{}_{}_iper_{}.png'.format(save_string, grp['name'], per))
-#         plt.show()
-#
-#         use_dict['pop_sizes'] = pop_sizes
-#
-#     return use_dict
 
 def subsample_trials(neuron_info, beh_df, beh_info, beh_resps, beh_dict, mask_shape, per_ind=3, name_key='names', date_key='file_dates'):
 
@@ -2108,164 +1884,6 @@ def plot_decode_by_class(class_name, class_labels, dec_dict, per_keys, rois=['Al
                 plt.savefig(save_dir + '{}_within_mouse_False_n_train_{}_C_{}_{}_{}_across_{}_per_{}_pop_{}_{}.pdf'.format(
                     grp['name'], n_train, reg_C, df_id, '_'.join(rois), class_name, per_key, use_pop, activity_type), bbox_inches='tight')
 
-                # plt.savefig(save_dir + '{}_within_mouse_False_n_train_{}_C_{}_{}_{}_across_{}_per_{}_pop_{}.png'.format(
-                #     grp['name'], n_train, reg_C, df_id, '_'.join(rois), class_name, per_key, use_pop), bbox_inches='tight')
-                # break
-                # OLD
-
-                # for i_grp, grouping in enumerate(use_keys):
-                #     stat, pvalue = stats.f_oneway(*[agg_df.loc[
-                #                                         np.logical_and(agg_df[class_name] == class_label,
-                #                                                        agg_df['grouping'] == grouping), 'Accuracy']
-                #                                     for class_label in class_labels])
-                #     print(stat, pvalue)
-                #     plot_stars(g.axes.flat[i_grp], [(len(class_labels) - 1) / 2], [pvalue])
-
-                # if len(use_keys) > 1:
-                #     g.map_dataframe(sns.lineplot, estimator=None, **hue_kwargs)
-                # else:
-                #     g.map_dataframe(sns.swarmplot, size=4, **hue_kwargs)
-                # g.map_dataframe(sns.pointplot, **mean_kwargs).set_titles("")
-                #
-                # arrange_grid(g, col_order, use_keys, hlines=.5)
-                # g.set(xlim=(-.5, len(use_keys) - .5))
-                # g.axes.flat[-1].legend(loc=(1.04, 0))
-
-                #
-                # if rois:
-                #     is_within_rois = np.isin(grp[prefix_df][df_id][per_key][use_pop]['Subregion'], rois)
-                #     use_df = grp[prefix_df][df_id][per_key][use_pop].iloc[is_within_rois]
-                # else:
-                #     use_df = grp[prefix_df][df_id][per_key][use_pop]
-                #
-                # plt.figure(figsize=(n_labels * 1.5 + 1, 3))
-                #
-                # if interaction:
-                #     g = sns.pointplot(**spec, data=use_df, dodge=True, palette=use_palette, zorder=1)
-                #
-                #     if len(rois) > 1:
-                #         aovs = [grp['stats']['all_mice'][roi]['between_' + class_name][df_id] for roi in rois]
-                #     else:
-                #         aovs = [grp['stats']['all_mice'][rois[0]]['between_' + class_name][df_id]]
-                #
-                #     # grouping_ps = [aov[aov['Source'] == 'Interaction']['p-unc'].values for aov in aovs]
-                #     # grouping_ps = [aov[aov['Source'] == '{} * {}'.format('grouping', class_name)]['p-unc'].values for aov in aovs]
-                #     relevant_ps = [aov.loc['C({}):C(grouping)'.format(class_name), 'PR(>F)'] for aov in aovs]
-                #     centers = np.arange(0.5, len(aovs))
-                #     plt.legend(loc=(1.04, 0))
-                #
-                # else:
-                #     g = sns.stripplot(**spec, data=use_df, dodge=True, palette=use_palette, zorder=0)
-                #     sns.pointplot(**spec, data=use_df, join=False, ci=95, capsize=.1, scale=.7, dodge=.58, palette=['k'] * 3, label=False)
-                #     [ax.legend().remove() for ax in g.axes.flat()]
-                #
-                #     if len(rois) > 1:
-                #         aovs = [grp['stats']['all_mice'][class_labels[0]][roi][df_id]['oneway'] for roi in rois]
-                #     else:
-                #         aovs = [grp['stats']['all_mice'][class_label][rois[0]][df_id]['oneway'] for class_label in class_labels]
-                #
-                #     # grouping_ps = [aov[aov['Source'] == 'grouping']['p-unc'].values for aov in aovs]
-                #     relevant_ps = [aov.loc['C(grouping)'.format(class_name), 'PR(>F)'] for aov in aovs]
-                #
-                #     # don't include the black dots in the legend
-                #     h, l = g.get_legend_handles_labels()
-                #     nlab = len(np.unique(use_df['grouping']))
-                #     plt.legend(h[0:nlab], l[0:nlab], loc=(1.04, 0))
-                #
-                #     plt.xlim(-0.5, n_labels - 0.5)
-                #     plt.hlines(0.5, xmin=plt.xlim()[0], xmax=plt.xlim()[1], ls='--', color=[.5] * 3, lw=1)
-                #     plt.vlines(np.arange(0.5, plt.xlim()[1]), ymin=plt.ylim()[0], ymax=plt.ylim()[1], ls='--', color=[.5] * 3, lw=1)
-                #     centers = np.arange(n_labels)
-                #
-                # plot_stars(plt.gca(), centers, np.array(relevant_ps), s=12)
-                # plt.ylabel('Decoder accuracy')
-                # hide_spines()
-
-
-
-# def plot_mouse_decode_by_class(class_name, class_labels, dec_dict, per, rois=['All Subregions'], pseudo=True, n_splits=6):
-#
-#     n_train = n_splits - 1
-#     if pseudo:
-#         prefix_df = 'pseudo_mouse_dfs'
-#         ml = 'pseudo_mouse_level'
-#     else:
-#         prefix_df = 'mouse_dfs'
-#         ml = 'mouse_level'
-#
-#     if len(rois) > 1:
-#         spec = dict(x='Subregion', y='Accuracy', hue='grouping', order=rois)
-#         n_labels = len(rois)  # number of subregions
-#         width = n_labels + 1
-#     else:
-#         spec = dict(x=class_name, y='Accuracy', hue='grouping', order=class_labels)
-#         n_labels = len(class_labels)  # number of genotypes, lesion, etc.
-#         width = n_labels * 1.5 + 1
-#
-#     assert len(rois) == 1 or class_name == 'helper'
-#
-#     for i_grp, grp in enumerate(dec_dict.values()):
-#         print(grp['name'])
-#         if 'stats' not in grp:
-#             grp['stats'] = {}
-#         if 'all_mice' not in grp['stats']:
-#             grp['stats']['all_mice'] = {}
-#
-#         for df_id, use_colors, use_keys in zip(['disagg', 'pool'], [grp['colors'], grp['pooled_colors']],
-#                                                [grp['keys'], ['Across distribution', 'Within distribution']]):
-#
-#             sub_df = grp[prefix_df][df_id][per]
-#
-#             for i_roi, roi in enumerate(rois):
-#                 if roi not in grp['stats']['all_mice']:
-#                     grp['stats']['all_mice'][roi] = {}
-#                 if ml not in grp['stats']['all_mice'][roi]:
-#                     grp['stats']['all_mice'][roi][ml] = {}
-#
-#                 # confirmed that this is the same as Accuracy ~ C(grouping) when only one level of class_name
-#                 grp['stats']['all_mice'][roi][ml][df_id] = run_lm('Subregion', roi, class_name, sub_df, lme=True)
-#
-#             if len(rois) == 1:
-#                 use_subr = rois[0]
-#                 use_df = sub_df[sub_df['Subregion'] == use_subr]
-#                 centers = [0.5]
-#                 result = grp['stats']['all_mice'][roi][ml][df_id].summary().tables[1]
-#                 # interaction terms when they exist, else main effect of grouping
-#                 relevant_ps = result[-len(use_keys):-1]['P>|z|'].values.astype(np.float64)
-#             else:
-#                 use_subr = 'across_subr'
-#                 use_df = sub_df
-#                 centers = np.arange(n_labels)
-#                 results = [grp['stats']['all_mice'][roi][ml][df_id].summary().tables[1] for roi in rois]
-#                 relevant_ps = [result[1:len(use_keys)]['P>|z|'].values.astype(np.float64) for result in results]
-#
-#             plt.figure(figsize=(width, 3))
-#             mouse_means = use_df.groupby(['mouse', 'grouping', class_name, 'Subregion']).mean().reset_index()
-#             ax = sns.stripplot(**spec, data=mouse_means, palette=use_colors, dodge=True)
-#
-#             n_grps = len(use_keys)
-#             # connect points belonging to same mouse
-#             for i_lab in range(n_labels):
-#                 for i_grp in range(n_grps):
-#                     if i_grp < n_grps - 1:
-#                         for (x0, y0), (x1, y1) in zip(ax.collections[i_lab * n_grps + i_grp].get_offsets(),
-#                                                       ax.collections[i_lab * n_grps + i_grp + 1].get_offsets()):
-#                             ax.plot([x0, x1], [y0, y1], color='black', zorder=0)
-#
-#             if len(rois) > 1:
-#                 plt.legend(loc=(1.04, 0))
-#             else:
-#                 plt.legend(loc=(0.5, 1.02))
-#
-#             plt.vlines(np.arange(0.5, n_labels-1), ymin=plt.ylim()[0], ymax=plt.ylim()[1], ls='--', color=[.5]*3, lw=1)
-#             if df_id == 'pool':
-#                 plot_stars(ax, centers, np.array(relevant_ps))
-#             hide_spines()
-#             plt.savefig('neural_decoding/{}_n_train_{}_{}_{}_pseudo_{}_by_{}_per_{}_across_mice.pdf'.format(
-#                 grp['name'], n_train, df_id, use_subr, pseudo, class_name, per), bbox_inches='tight')
-#             plt.savefig('neural_decoding/{}_n_train_{}_{}_{}_pseudo_{}_by_{}_per_{}_across_mice.png'.format(
-#                 grp['name'], n_train, df_id, use_subr, pseudo, class_name, per), bbox_inches='tight')
-
 
 def get_sids(neuron_info):
     _, fig_path_inds = np.unique(neuron_info['fig_paths'], return_index=True)
@@ -2370,9 +1988,6 @@ def compute_parallelism_split_interaction_by_class(class_name, class_labels, neu
 def do_pairwise_dists(inds, dat, rng, periods, pair_order, ps_resps, class_label, roi,
                       mouse_name, ps_keys, use_size, metric, fig_path='pseudo'):
 
-    # bases = np.eye(use_size)
-    # random_rot = special_ortho_group.rvs(use_size)
-
     for per in range(periods['n_prerew_periods']):
         if np.sum(inds) >= use_size:
             for i_po, po in enumerate(pair_order):
@@ -2385,23 +2000,6 @@ def do_pairwise_dists(inds, dat, rng, periods, pair_order, ps_resps, class_label
                                    dat[po[2], sub_inds, per] - dat[po[3], sub_inds, per])),
                         metric=metric)[0, 1]
                 use_dict[fig_path] = np.mean(use_dict[fig_path])
-
-            # I think this is wrong and can be ignored
-            # avg_diff = np.mean(dat[2:4, sub_inds], axis=0) - np.mean(dat[4:6, sub_inds], axis=0)
-            # # print(avg_diff.shape)
-            # rot_diff = np.dot(random_rot, avg_diff)
-            # # print(rot_diff.shape)
-            #
-            # axis_dict = axis_sims[class_label][roi][mouse_name][per]
-            # axis_dict[fig_path] = np.zeros(use_size)
-            # random_dict = random_sims[class_label][roi][mouse_name][per]
-            # random_dict[fig_path] = np.zeros(use_size)
-            #
-            # for i_sub in range(use_size):
-            #     axis_dict[fig_path][i_sub] = 1 - pairwise_distances(
-            #         np.vstack((avg_diff[:, per], bases[i_sub])), metric=metric)[0, 1]
-            #     random_dict[fig_path][i_sub] = 1 - pairwise_distances(
-            #         np.vstack((rot_diff[:, per], bases[i_sub])), metric=metric)[0, 1]
 
     return ps_resps  # , axis_sims, random_sims
 
@@ -2500,18 +2098,6 @@ def reduce(ret_df, neuron_info, X_means_norm, class_name, protocol_info, colors,
                             'tt': np.arange(n_trace_types)})
         sns.scatterplot(pdf, x='projection1', y='projection2', hue='tt',
                         palette=list(colors['colors'][:n_trace_types]), s=100, ax=ax, legend=False)
-
-        #     # This is what you would do for single-trial dimensionality reduction
-        #     sess_data = all_sess_trial_means[index]
-        #     tt_data = all_trial_types[index]
-        #     projection = reducer.fit_transform(sess_data[:, :, late_trace_ind].T)
-        #     session_components[index] = reducer.components_
-        #     tt_avgs = np.array([np.mean(projection[tt_data == x, :], axis=0) for x in np.arange(n_trace_types)])
-        #     ax.scatter(projection[:, 0], projection[:, 1], color=np.array(colors['colors'], dtype='object')[tt_data], s=2)
-
-        #     for i_comp, axs in zip(np.arange(n_components), [axs2.flat, axs3.flat]):
-        #         pairwise_dists[index, i_comp] = pairwise_distances(tt_avgs[:, i_comp].reshape(-1, 1))
-        #         axs[index].pcolormesh(pairwise_dists[index, i_comp])
 
         ax.set_ylim(np.array(ax.get_ylim()) * 1.2)
         ax.set_xlim(np.array(ax.get_xlim()) * 1.2)
@@ -3143,21 +2729,6 @@ def general_plotter(pseudo, sub_df, class_name, class_labels, depvar, strat, use
         g.map_dataframe(sns.lineplot, estimator=None, **hue_kwargs)  # style='dec_key', style_order=list(style_order),
         g.map_dataframe(sns.pointplot, **mean_kwargs).set_titles("")  # "{col_name}")
 
-
-    # # if doing swarmplot. This doesn't work as written because I can't figure out how to get two datasets (melt_df
-    # and agg_df) onto the same FacetGrid
-    # if class_name == 'helper':
-    #     helper_kwargs = dict(col='Subregion', order=use_keys[:-1])
-    #     sns.swarmplot(data=melt_df, size=4, alpha=.4, **helper_kwargs, **catplot_kwargs)
-    #     sns.swarmplot(data=agg_df, size=8, alpha=.8, **helper_kwargs, **catplot_kwargs)
-    #     sns.boxplot(data=grand_mean, **helper_kwargs, **boxplot_kwargs)
-    #
-    # else:
-    #     class_kwargs = dict(col=class_name, col_order=class_labels, order=use_keys[:-1])
-    #     sns.swarmplot(data=melt_df, size=4, alpha=.4, **class_kwargs, **catplot_kwargs)
-    #     sns.swarmplot(data=agg_df, size=8, alpha=.8, **class_kwargs, **catplot_kwargs)
-    #     sns.boxplot(data=grand_mean, **class_kwargs, **boxplot_kwargs)
-
     g.axes.flat[-1].legend(loc=(1.04, 0))
     g.set(xlim=(-.5, len(hue_order) - .5))
     arrange_grid(g, col_order, hue_order, hlines, ylims, yticks)
@@ -3201,16 +2772,6 @@ def general_stats(pseudo, stat_df, depvar, ax, roi, class_name, class_labels, te
 
     print(skip_int, minus, start, end)
 
-    # if use_keys == ['odor']:  # and not class_name == 'helper':
-    #     skip_int = 0
-    #     minus = 0
-    # elif pseudo:
-    #     skip_int = 1
-    #     minus = 0
-    # else:
-    #     skip_int = 0 if class_name == 'helper' else 1
-    #     minus = 1  # since I'm taking diffs, there will be one fewer asterisk to draw
-
     if not set(use_keys).isdisjoint(['odor', 'ccgp', 'var', 'parallel']):
         centers = [0] if class_name == 'helper' else [0.5]
     elif df_id == 'pool':
@@ -3239,22 +2800,13 @@ def general_stats(pseudo, stat_df, depvar, ax, roi, class_name, class_labels, te
         # if class_name == 'helper':  # skip intercept term, usually
         if len(class_labels) == 1:
             relevant_ps = result[skip_int:len(use_keys) - minus]['P>|z|'].values
-            # try:
-            #     relevant_ps = result[skip_int:len(use_keys) - minus]['P>|z|'].values.astype(np.float64)
-            # except ValueError:
-            #     print('No p value, presumably LME did not converge')
-            #     relevant_ps = [1]
         else:
             # interaction terms when they exist (i.e. not for ccgp or odor), else main effect of grouping
-            # try:
             if len(np.unique(stat_df['grouping'])) > 1:
                 # relevant_ps = result[-(len(use_keys) - minus):-1]['P>|z|'].values.astype(np.float64)
                 relevant_ps = result[start:end]['P>|z|'].values  #.astype(np.float64)
             else:
                 relevant_ps = result[-2:-1]['P>|z|'].values #.astype(np.float64)
-            # except ValueError:
-            #     print('No p value, presumably LME did not converge')
-            #     relevant_ps = [1]
         # print(relevant_ps)
         relevant_ps[relevant_ps == ''] = 1
         relevant_ps = relevant_ps.astype(np.float64)
@@ -3570,10 +3122,6 @@ def plot_mouse_decode_by_class(class_name, class_labels, dec_dict, per_keys, roi
                                             ctd_mat[i_per // n_pers, i_per % n_pers, :, i_roi] = np.nan
                                             ctd_stat[i_per // n_pers, i_per % n_pers, :, i_roi] = 1
                                     else:
-                                        # print(df_id, pseudo)
-                                        # print(roi)
-                                        # print(roi_mean)
-                                        # print(diff_df)
                                         ctd_mat[i_per // n_pers, i_per % n_pers, i_roi, :] = roi_mean
                                         ctd_stat[i_per // n_pers, i_per % n_pers, i_roi, :] = pval
 
@@ -3637,26 +3185,6 @@ def plot_mouse_decode_by_class(class_name, class_labels, dec_dict, per_keys, roi
                             hide_spines()
                             save_mouse_plot(save_dir, grp, n_train, reg_C, test, df_id, rois, pseudo, 'ctd', use_pop, class_name, activity_type)
 
-                            # joint plot
-                            # if per_key == use_per_key:
-                            #     bin_grp = dec_dict['bin'][grp['key']]
-                            #     bin_df = bin_grp[prefix + 'mouse_dfs']['all'].copy()
-                            #     if pseudo:
-                            #         bin_df = bin_df[bin_df['max']]
-                            #     if df_id == 'pool':
-                            #         is_within_dist = np.isin(bin_df['grouping'], bin_grp['within_dist_keys'])
-                            #         bin_df.loc[is_within_dist, 'grouping'] = 'Within distribution'
-                            #         bin_df.loc[~is_within_dist, 'grouping'] = 'Across distribution'
-                            #     per_order = ['{}_{}'.format(x, x) for x in np.arange(len(bin_grp['time_bin_centers']))]
-                            #     with warnings.catch_warnings():
-                            #         warnings.simplefilter('ignore')
-                            #         temp_g = temporal_plotter(bin_df, class_name, class_labels, 'Accuracy', use_keys, use_colors, rois,
-                            #                                   per_order, grp['time_bin_centers'], hlines=0.5)
-                            #         ax = g.add_subplot(1, 2, 2)
-                            #         g, stat_df = general_plotter(pseudo, sub_df, class_name, class_labels, 'Accuracy', strat,
-                            #                                    use_keys, use_colors, rois, mouse_colors, within=within, hlines=0.5)
-
-
                     elif pseudo == False:
                         per_df = grp[prefix + 'mouse_dfs']['all'].copy()
                         if pseudo:
@@ -3703,10 +3231,6 @@ def plot_parallelism_interaction_by_class(class_name, ps_resps, periods, rois=['
     disagg_df = pd.DataFrame(ps_dict)
 
     pool_df = disagg_df.copy()
-    # # is_within_dist = pool_df['grouping'] == 'B1-B2v.C1-C2'
-    # is_within_dist = pool_df['grouping'] == 'Odor direction'
-    # pool_df.loc[is_within_dist, 'grouping'] = pooled_keys[1]
-    # pool_df.loc[~is_within_dist, 'grouping'] = pooled_keys[0]
     pool_df['grouping'] = pooled_keys[0]
 
     ps_df = {'disagg': disagg_df, 'pool': pool_df}
@@ -3740,8 +3264,6 @@ def plot_parallelism_interaction_by_class(class_name, ps_resps, periods, rois=['
         # print(use_df.keys(), strat, unit)
 
         # average over the two ways to draw parallelism score
-        # use_df = use_df.groupby(['grouping', 'period', class_name, 'Subregion', 'mouse', 'pop_id'], as_index=False).mean()
-        # print(plot_df)
         g, stat_df = general_plotter(pseudo, plot_df, class_name, class_labels, 'Parallelism', strat,
                                      use_keys, use_colors, rois, mouse_colors, class_colors, within=False, hlines=0, unit=unit)
 
@@ -3749,21 +3271,7 @@ def plot_parallelism_interaction_by_class(class_name, ps_resps, periods, rois=['
         for i_roi, roi in enumerate(rois):
 
             cls_ps = []
-            # # Using AnovaRM here is wrong, because we don't care about the within-group effect of grouping; we care about
-            # # whether the PS is different from zero, as well as the difference between classes (potentially)
-            # if class_name == 'genotype' and len(np.unique(use_df['mouse'])) == 1:
-            #     for class_label in class_labels:
-            #         # print(use_df)
-            #         anova_res = AnovaRM(data=use_df[use_df[class_name] == class_label], depvar='Parallelism',
-            #                             subject='pop_id', within=['grouping']).fit()
-            #         print(anova_res)
-            #         pvals = anova_res.anova_table["Pr > F"][0]
-            #         print(pvals)
-            #         cls_ps.append(pvals)
-            #
-            # else:
             print(per, roi)
-            # print(stat_df)
             ps_stats[df_id][roi][per] = general_stats(pseudo, stat_df, 'Parallelism', g.axes.flat[i_roi], roi,
                                                       class_name, class_labels, test, use_keys, df_id)
 
@@ -3795,116 +3303,6 @@ def plot_parallelism_interaction_by_class(class_name, ps_resps, periods, rois=['
 
     return ps_stats
 
-# #
-# def compute_parallelism_pseudo_interaction_by_class(class_name, class_labels, neuron_info, cue_resps, periods,
-#                                                    rois=['All Subregions'], metric='cosine', n_splits=5, use_size=100):
-#     """
-#     :param class_name e.g. 'genotype', 'lesion'
-#     :param class_labels e.g. ['matched', 'lesioned']
-#     :param neuron_info: pandas DataFrame
-#     :param cue_resps: array
-#     :param periods: dictionary
-#     :param rois: list
-#     :param metric: string to input to sklearn
-#     :param n_splits: number of disjoint subsets to use to compute population vector(s)
-#     :min_size: minimum number of neurons per mouse-region
-#     Shape = (n_shuffles, n_trial_types, n_neurons, n_periods)
-#     :return:
-#     """
-#
-#     # parallelism score setup
-#     ps_keys = ['B1-C1v.B2-C2', 'B1-C2v.B2-C1', 'B1-B2v.C1-C2']
-#     pair_order = [(2, 4, 3, 5), (2, 5, 3, 4), (2, 3, 4, 5)]
-#
-#     # types_to_pair = np.array([2, 3, 4, 5])
-#     mice = np.unique(neuron_info['names'])
-#     ps_resps = {class_label: {roi: {mouse: {k: {} for k in ps_keys} for mouse in mice} for roi in rois} for
-#                 class_label in class_labels}
-#
-#     all_sids = get_sids(neuron_info)
-#
-#     n_trial_types = cue_resps.shape[0]
-#     n_neurons = cue_resps.shape[1]
-#     max_n_trials_per_type = cue_resps.shape[2]
-#     n_periods = cue_resps.shape[3]
-#
-#     split_n_trials_per_type = int(np.ceil(max_n_trials_per_type))
-#     split_resps = np.full((n_trial_types, n_neurons, split_n_trials_per_type, n_splits, n_periods), np.nan)
-#
-#     rng = np.random.default_rng(seed=1)
-#     for sid in np.unique(all_sids):
-#         sid_inds = np.flatnonzero(all_sids == sid)
-#         subt = validate_ccgp(cue_resps[..., 0], sid_inds, n_trial_types)
-#         for i_type in range(n_trial_types):
-#             # get a random subset of trials on each session
-#             type_folds = np.array_split(rng.permutation(subt[i_type]), n_splits)
-#             for i_fold, fold in enumerate(type_folds):
-#                 # for each subset (fold), put them in a random order the correct number of times
-#                 split_resps[i_type, sid_inds, :len(fold), i_fold, :] = cue_resps[i_type, sid_inds][..., fold, :]
-#
-#     dat = np.nanmean(split_resps, axis=2)  # mean across trials, making it shape (n_trial_types, n_neurons, n_splits, n_periods)
-#
-#     for i_label, class_label in enumerate(class_labels):
-#         for i_roi, roi in enumerate(rois):
-#             for i_mouse, mouse_name in enumerate(mice):
-#                 inds = np.logical_and(neuron_info[class_name] == class_label, neuron_info['names'] == mouse_name)
-#                 if roi != 'All Subregions':
-#                     inds = np.logical_and(inds, neuron_info['str_regions'] == roi)
-#
-#                 if np.sum(inds) > use_size:
-#                     use_dict = ps_resps[class_label][roi][mouse_name]
-#                     for per in range(periods['n_prerew_periods']):
-#                         for i_po, po in enumerate(pair_order):
-#                             use_dict[ps_keys[i_po]][per] = np.zeros(n_splits)
-#                             for i_split in range(n_splits):
-#                                 use_dict[ps_keys[i_po]][per][i_split] = 1 - pairwise_distances(
-#                                     np.vstack((dat[po[0], inds, i_split, per] - dat[po[1], inds, i_split, per],
-#                                                dat[po[2], inds, i_split, per] - dat[po[3], inds, i_split, per])),
-#                                     metric=metric)[0, 1]
-#     return ps_resps
-
-#
-# def compute_parallelism_interaction_by_class(class_name, class_labels, neuron_info, dat, periods, rois=['All Subregions'],
-#                                              metric='cosine', min_size=20):
-#     """
-#     :param class_name e.g. 'genotype', 'lesion'
-#     :param class_labels e.g. ['matched', 'lesioned']
-#     :param neuron_info: pandas DataFrame
-#     :param dat: trial-averaged data, usually X_means. Shape = (n_trial_types, n_neurons, n_periods)
-#     :param shuff_dat: trial-averaged data after randomly shuffling trial types, usually X_shuff_means,
-#     Shape = (n_shuffles, n_trial_types, n_neurons, n_periods)
-#     :return:
-#     """
-#
-#     # parallelism score setup
-#     ps_keys = ['B1-C1v.B2-C2', 'B1-C2v.B2-C1', 'B1-B2v.C1-C2']
-#     pair_order = [(2, 4, 3, 5), (2, 5, 3, 4), (2, 3, 4, 5)]
-#
-#     # types_to_pair = np.array([2, 3, 4, 5])
-#     mice = np.unique(neuron_info['names'])
-#     ps_resps = {class_label: {roi: {mouse: {k: {} for k in ps_keys} for mouse in mice} for roi in rois} for
-#                 class_label in class_labels}
-#
-#     for i_label, class_label in enumerate(class_labels):
-#         for i_roi, roi in enumerate(rois):
-#             for i_mouse, mouse_name in enumerate(mice):
-#
-#                 inds = np.logical_and(neuron_info[class_name] == class_label, neuron_info['names'] == mouse_name)
-#                 if roi != 'All Subregions':
-#                     inds = np.logical_and(inds, neuron_info['str_regions'] == roi)
-#
-#                 if np.sum(inds) > min_size:
-#
-#                     use_dict = ps_resps[class_label][roi][mouse_name]
-#                     for per in range(periods['n_prerew_periods']):
-#
-#                         for i_po, po in enumerate(pair_order):
-#                             use_dict[ps_keys[i_po]][per] = [1 - pairwise_distances(
-#                                 np.vstack((dat[po[0], inds, per] - dat[po[1], inds, per],
-#                                            dat[po[2], inds, per] - dat[po[3], inds, per])),
-#                                 metric=metric)[0, 1]]
-#
-#     return ps_resps
 
 def make_ps_df_by_class(class_name, use_resps, periods):
     use_dict = {  # 'mouse': [],
@@ -3928,7 +3326,6 @@ def make_ps_df_by_class(class_name, use_resps, periods):
                     use_dict['Parallelism'].extend(use_resps[class_label][roi][key][per])
 
     return use_dict
-
 
 
 def plot_parallelism_score_by_class(class_name, ps_resps, ps_shuff, periods, rois=['All Subregions']):
@@ -4079,10 +3476,6 @@ def async_sizefun(X, seed, n_shuff=100):
             # y_train = rng.permutation(y_train)  # TODO: see if this better captures my intuitions
             y_test = rng.permutation(y_test)
 
-        # logregcv = LogisticRegressionCV(cv=kfold, solver='liblinear', n_jobs=1, class_weight='balanced',
-        #                                 max_iter=10000, random_state=1)
-        # pipeline = Pipeline([('estimator', logregcv)]).fit(X_train, y_train)
-
         preds = pipeline.predict(X_test)
         scores[i_shuff, 0] = balanced_accuracy_score(y_test, preds)
         predictions = pipeline.predict_proba(X_test)
@@ -4092,480 +3485,6 @@ def async_sizefun(X, seed, n_shuff=100):
     return scores
 
 
-#     for i_split in range(n_splits):
-# #         print(i_split)
-#         X_train = X[..., i_split::n_splits, 0]
-#         y_train = y[..., i_split::n_splits][..., ~np.isnan(X_train)]
-#         X_train = X_train[~np.isnan(X_train)].reshape(-1, 1)
-
-#         logreg = LogisticRegression(penalty='l2', C=5e-3, solver='liblinear', max_iter=10000, n_jobs=1,
-#                                     class_weight='balanced', random_state=1)
-#         pipeline = Pipeline([('estimator', logreg)])
-#         pipeline.fit(X_train, y_train)
-
-#         for i_test in range(n_tests):
-#             X_test = X[..., i_test + 1]
-#             y_test = y[~np.isnan(X_test)]
-#             X_test = X_test[~np.isnan(X_test)].reshape(-1, 1)
-
-#             preds = pipeline.predict(X_test)
-# #             scores[i_split, i_test, 0] = pipeline.score(X_test, y_test)
-#             scores[i_split, i_test, 0] = balanced_accuracy_score(y_test, preds)
-#             predictions = pipeline.predict_proba(X_test)
-#             scores[i_split, i_test, 1] = roc_auc_score(y_test, predictions[:, 1], average='macro')
-#     #             scores[i_split, i_test, 2] = pipeline['estimator'].coef_[0, 0]
-
-#     X_all = X[..., 0]
-#     y_all = y[~np.isnan(X_all)]
-#     X_all = X_all[~np.isnan(X_all)].reshape(-1, 1)
-#     pipeline.fit(X_all, y_all)
-#     weight = pipeline['estimator'].coef_[0, 0]
-
-#     return scores, weight
-
-
-def async_sizefun_star(args):
-    return async_sizefun(*args)
-
-
-def compute_size_auroc(dec_dict, resps, neuron_info, per, baseline, n_shuff=100):
-
-    print("With baselines")
-
-    aurocs = {}
-    rng = np.random.default_rng(seed=1)
-    total_cells = neuron_info.shape[0]
-
-    #     n_cells = 8
-    n_cells = total_cells
-
-    #     mp.set_start_method('forkserver', force=True)
-    mp.set_start_method('fork', force=True)
-
-    with mp.Pool(int(os.environ['SLURM_CPUS_PER_TASK'])) as pool:
-        print('Starting pool with {} workers'.format(os.environ['SLURM_CPUS_PER_TASK']))
-
-        for grp in dec_dict.values():
-
-            use_shuff = n_shuff
-
-            # if 'Random' in grp['name']:
-            #     print('Random detected. Skipping shuffles')
-            #     use_shuff = 0
-            # else:
-            #     use_shuff = n_shuff
-
-            nk = len(grp['keys'])
-            score = np.zeros((n_cells, nk, use_shuff + 1))
-            auroc = np.zeros((n_cells, nk, use_shuff + 1))
-            weight = np.zeros((n_cells, nk, use_shuff + 1))
-
-            st = time.time()
-
-            for i_key, key in enumerate(grp['keys']):
-                # Xs = [grp['resps'][key][:, i_cell][..., per] for i_cell in range(n_cells)]
-                #  dynamically construct Xs from inds
-                print(grp['inds'][key])
-                subresps = np.stack((resps[grp['inds'][key][0]], resps[grp['inds'][key][1]]), axis=3)
-                Xs = [subresps[:, i_cell][..., per] - subresps[:, i_cell][..., baseline] for i_cell in range(total_cells)]
-
-                seeds = rng.integers(2 ** 32, size=n_cells)
-                iterable = list(zip(Xs, seeds, itertools.repeat(use_shuff)))
-                results = list(tqdm.tqdm(pool.imap(async_sizefun_star, iterable, chunksize=5), total=n_cells))
-                #                 results = list(tqdm.tqdm(map(async_sizefun_star, iterable), total=n_cells))
-
-                scores = np.array(results)
-                #                 print(np.shape(scores))
-                #                 scores = np.array([x[0] for x in results])
-                #                 print(scores.shape)
-                score[:, i_key] = scores[:, :, 0]
-                auroc[:, i_key] = scores[:, :, 1]
-                weight[:, i_key] = scores[:, :, 2]
-
-            print(time.time() - st)
-            aurocs[grp['name']] = {
-                'score': score,
-                'auroc': auroc,
-                'weight': weight
-            }
-
-    return aurocs
-
-
-def async_fun(X, seed, name, roc_key):
-
-    rng = np.random.default_rng(seed=seed)
-    y = np.tile(A=np.reshape([1, 2], newshape=(2, 1)), reps=[1, X.shape[1]])
-    # print(X.shape, y.shape)
-
-    kfold = StratifiedKFold(n_splits=5, shuffle=False)
-    scaler = StandardScaler()
-
-    # print(X)
-    # print(y)
-
-    if name == 'ccgp':
-        X_train = X[..., 0]
-        y_train = y[~np.isnan(X_train)]
-        X_train = X_train[~np.isnan(X_train)].reshape(-1, 1)
-        X_test = X[..., 1]
-        y_test = y[~np.isnan(X_test)]
-        X_test = X_test[~np.isnan(X_test)].reshape(-1, 1)
-
-        if roc_key == 'null_auroc':
-            y_train = rng.permutation(y_train)
-            y_test = rng.permutation(y_test)
-
-        logregcv = LogisticRegressionCV(cv=kfold, solver='liblinear', n_jobs=1, class_weight='balanced',
-                                        max_iter=10000, random_state=1)
-        # pipeline = Pipeline([('transformer', scaler), ('estimator', logregcv)]).fit(X_train, y_train)
-        pipeline = Pipeline([('estimator', logregcv)]).fit(X_train, y_train)
-        predictions = pipeline.predict_proba(X_test)
-        # logregcv = logregcv.fit(X_train, y_train)
-        # predictions = logregcv.predict_proba(X_test)
-        # out = roc_auc_score(y_test, predictions[:, 1], average='weighted')
-        out = roc_auc_score(y_test, predictions[:, 1], average='macro')  # TODO: CHANGED  8/16/23. CONFIRM CONSISTENT
-
-    else:
-        y = y[~np.isnan(X)]
-        X = X[~np.isnan(X)].reshape(-1, 1)
-        if roc_key == 'null_auroc':
-            y = rng.permutation(y)
-
-        logreg = LogisticRegression(penalty='l2', C=5e-3, solver='liblinear', max_iter=10000, n_jobs=1,
-                                    class_weight='balanced', random_state=1)
-        # pipeline = Pipeline([('transformer', scaler), ('estimator', logreg)])
-        pipeline = Pipeline([('estimator', logreg)])
-        predictions = cross_val_predict(pipeline, X, y, method='predict_proba', cv=kfold)
-        out = roc_auc_score(y, predictions[:, 1], average='weighted')
-
-    # print(X)
-    # print(y)
-
-    return out
-
-
-def async_fun_star(args):
-    return async_fun(*args)
-
-
-def compute_auroc(dec_dict, neuron_info, per, roc_key='all_auroc', dist_keys=['ccgp', 'pair', 'cong']):
-
-    aurocs = {}
-    rng = np.random.default_rng(seed=1)
-    total_cells = neuron_info.shape[0]
-
-    # print(psutil.virtual_memory())
-    # ctx = mp.get_context("forkserver")
-    # for whatever reason, I seem to have fewer issues with processes hanging when I use forkserver
-    mp.set_start_method('forkserver', force=True)
-
-    # for grp in dec_dict.values():
-    with mp.Pool(int(os.environ['SLURM_CPUS_PER_TASK'])) as pool:
-        print('Starting pool with {} workers'.format(os.environ['SLURM_CPUS_PER_TASK']))
-
-        for dist_key in dist_keys:
-            grp = dec_dict[dist_key]
-            print(grp['name'])
-            nk = len(grp['keys'])
-            grp[roc_key] = np.zeros((total_cells, nk))
-            st = time.time()
-
-            # for i_cell in range(total_cells):
-            for i_key, key in enumerate(grp['keys']):
-                if grp['name'] != 'odor':
-                    Xs = [grp['resps'][key][:, i_cell][..., per] for i_cell in range(total_cells)]
-                    seeds = rng.integers(2**32, size=total_cells)
-                    iterable = list(zip(Xs, seeds, itertools.repeat(grp['name']), itertools.repeat(roc_key)))
-                    results = list(tqdm.tqdm(pool.imap(async_fun_star, iterable, chunksize=100), total=len(iterable)))
-                    grp[roc_key][:, i_key] = results
-
-            print(time.time() - st)
-            aurocs[grp['name']] = grp[roc_key]
-
-    return aurocs
-
-def hierboot_star(args):
-    return hierboot(*args)
-
-def hierboot(seed, mice, chunk_name, abbr_label, concat_df, prctiles):
-    # for i_boot in range(n_boot):
-        # randomly sample from subjects
-    rng = np.random.default_rng(seed=seed)
-    boot_mice = rng.choice(mice, size=len(mice), replace=True)
-    # for i_abbr, abbr_label in enumerate(abbr_labels):
-    combined_data = []
-    for boot_mouse in boot_mice:
-        mouse_data = concat_df.loc[np.logical_and(concat_df['names'] == boot_mouse,
-                                                  concat_df[chunk_name] == abbr_label), 'diff'].values
-        boot_data = rng.choice(mouse_data, size=len(mouse_data), replace=True)
-        combined_data.extend(boot_data)
-    combined_data = np.array(combined_data).reshape(1, -1)
-    # boot_qs[i_abbr, i_boot, :] = np.percentile(combined_data, prctiles)
-    # boot_above = combined_data > boot_qs[i_abbr, i_boot, :].reshape(-1, 1)
-    # boot_tails[i_abbr, i_boot, :] = [np.mean(combined_data[:, x]) for x in boot_above]
-
-    boot_q = np.percentile(combined_data, prctiles)
-    boot_above = combined_data > boot_q.reshape(-1, 1)
-    boot_tail = [np.mean(combined_data[:, x]) for x in boot_above]
-    return (boot_q, boot_tail)
-
-
-def plot_mouse_auroc_by_class(class_name, class_labels, dec_dict, neuron_info, roi='All Subregions', use_colors=None,
-                              these_aurocs=['all_auroc', 'null_auroc'], decs_to_use=['pair', 'cong', 'ccgp'],
-                              titles=None, mouse_colors=None, solo_prctile=80, input_prc_ps=None, prctiles=None):
-    # This is what I'm contrasting in the figures
-    assert len(class_labels) == 1 or len(these_aurocs) == 1
-    # if len(class_labels) == 1:
-    #     comp_var = 'shuff'
-    # elif len(these_aurocs) == 1:
-    #     comp_var = class_name
-
-    if titles is None:
-        titles = decs_to_use
-    assert len(titles) == len(decs_to_use)
-    if not isinstance(these_aurocs, list):
-        these_aurocs = [these_aurocs]
-
-    if type(use_colors) != list:
-        rgb = np.array(mpl.colors.to_rgb(use_colors))
-        chunk_colors = [rgb, (rgb + 1) / 2]
-    else:
-        chunk_colors = use_colors
-    print(chunk_colors)
-
-    klim = len(decs_to_use) - 1
-
-    # for bootstrapping
-    rng = np.random.default_rng(seed=1)
-    mice = np.unique(neuron_info['names'])
-    n_boot = 16*500
-
-    #     fig, axs = plt.subplots(2, klim + 1, figsize=((klim + 1) * 2.75, 5))  # , sharex=True)
-    #     plt.tight_layout()
-
-    prctiles = np.concatenate((np.arange(0, 91, 10), np.arange(91, 100, 2))) if prctiles is None else prctiles
-
-    if input_prc_ps is None:
-        prc_ps = np.zeros((len(decs_to_use), 2, len(prctiles)))
-    else:
-        prc_ps = input_prc_ps
-    prc_n = np.zeros((len(decs_to_use), len(prctiles)))
-    prc_diff = np.zeros((len(decs_to_use), len(prctiles)))
-    fig, axs = plt.subplots(klim + 1, len(prctiles) + 1, figsize=(1.5 * (len(prctiles) + 4), 9),
-                            gridspec_kw={'width_ratios': [4] + [1] * len(prctiles)}, squeeze=False)
-    fig.tight_layout()
-
-    sharey = True if len(these_aurocs) == 1 else False
-    prc_fig, prc_axs = plt.subplots(1, len(decs_to_use), figsize=(len(decs_to_use) * (int(not sharey) + 2) * .5, 2),
-                                    sharey=sharey, gridspec_kw={'wspace': 1}, squeeze=False)
-
-    for i_grp, grp_key in enumerate(decs_to_use):  # set order of iteration
-
-        grp = dec_dict[grp_key]
-        print(grp['name'])
-        concat_df = None
-        auroc_labels = ['_'.join([grp['name'], x.split('_')[0]]) for x in these_aurocs]
-
-        for use_auroc in these_aurocs:
-
-            abbr = '_'.join([grp['name'], use_auroc.split('_')[0]])
-
-            if len(these_aurocs) > 1:
-                chunk_name = 'shuff'
-                abbr_labels = ['_'.join([grp['name'], x.split('_')[0]]) for x in these_aurocs]
-            else:
-                chunk_name = class_name
-                abbr_labels = class_labels
-            print(abbr_labels)
-
-#                 inds_union = np.logical_or.reduce([neuron_info[class_name] == class_label for class_label in class_labels])
-#                 if rois[0] != 'All Subregions':
-#                     inds_union = np.logical_and(inds_union, neuron_info['str_regions'] == rois[0])
-
-            inds_union = np.logical_or.reduce([neuron_info[class_name] == class_label for class_label in class_labels])
-            if roi != 'All Subregions':
-                inds_union = np.logical_and(inds_union, neuron_info['str_regions'] == roi)
-
-            mouse_spec = dict(x=chunk_name, y='diff', hue='names', palette=mouse_colors, estimator=None,
-                              errorbar=None, legend=False, zorder=1)
-            avg_spec = dict(x=chunk_name, y='diff', hue=chunk_name, hue_order=abbr_labels, palette=chunk_colors,
-                            estimator='mean', errwidth=4, errorbar=('ci', 95))
-
-            use_df = neuron_info[inds_union].melt(
-                id_vars=[x for x in neuron_info.keys() if ('diff' not in x) and (x not in auroc_labels)],
-                value_vars=[abbr], var_name='shuff', value_name='diff')
-            #             print(use_df.shape)
-            concat_df = use_df if concat_df is None else pd.concat([concat_df, use_df])
-        #             print(concat_df.shape)
-
-        ax = axs[i_grp, 0]
-        # print(concat_df)
-        sns.violinplot(data=concat_df, x='names', y='diff', hue=chunk_name, hue_order=abbr_labels,
-                       palette=chunk_colors, dodge=True, ax=ax)
-        ax.set_title(grp_key)
-        ax.set_ylabel('auROC: Across - Within\nDistribution')
-        if i_grp == len(decs_to_use) - 1:
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
-        else:
-            ax.set_xticklabels([])
-            ax.set_xlabel('')
-        ax.legend().remove()
-        ax.spines['left'].set_position(("axes", -0.15))
-        #         print(concat_df)
-
-        if input_prc_ps is None:
-            # perform hierarchical bootstrapping!
-            boot_qs = np.zeros((len(abbr_labels), n_boot, len(prctiles)))
-            boot_tails = np.zeros((len(abbr_labels), n_boot, len(prctiles)))
-
-            mp.set_start_method('forkserver', force=True)
-            with mp.Pool(int(os.environ['SLURM_CPUS_PER_TASK'])) as pool:
-                for i_abbr, abbr_label in enumerate(abbr_labels):
-                    seeds = rng.integers(2**32, size=n_boot)
-                    # print(seeds, itertools.repeat(mice), itertools.repeat(chunk_name), itertools.repeat(abbr_label),
-                    #                     itertools.repeat(concat_df), itertools.repeat(prctiles))
-                    iterable = list(zip(seeds, itertools.repeat(mice), itertools.repeat(chunk_name), itertools.repeat(abbr_label),
-                                        itertools.repeat(concat_df), itertools.repeat(prctiles)))
-                    results = list(tqdm.tqdm(pool.imap(hierboot_star, iterable, chunksize=100), total=len(iterable)))
-                    # print(results)
-                    boot_qs[i_abbr, :, :] = [x[0] for x in results]
-                    boot_tails[i_abbr, :, :] = [x[1] for x in results]
-
-            # for i_boot in range(n_boot):
-            #     # randomly sample from subjects
-            #     boot_mice = rng.choice(mice, size=len(mice), replace=True)
-            #     for i_abbr, abbr_label in enumerate(abbr_labels):
-            #         combined_data = []
-            #         for boot_mouse in boot_mice:
-            #             mouse_data = concat_df.loc[np.logical_and(concat_df['names'] == boot_mouse,
-            #                                                       concat_df[chunk_name] == abbr_label), 'diff'].values
-            #             boot_data = rng.choice(mouse_data, size=len(mouse_data), replace=True)
-            #             combined_data.extend(boot_data)
-            #         combined_data = np.array(combined_data).reshape(1, -1)
-            #         boot_qs[i_abbr, i_boot, :] = np.percentile(combined_data, prctiles)
-            #         boot_above = combined_data > boot_qs[i_abbr, i_boot, :].reshape(-1, 1)
-            #         boot_tails[i_abbr, i_boot, :] = [np.mean(combined_data[:, x]) for x in boot_above]
-
-            # print(boot_qs.shape, boot_qs)
-            # print(boot_tails.shape, boot_tails)
-
-            q_boot_ps = np.mean(boot_qs[0] < boot_qs[1], axis=0)
-            tail_boot_ps = np.mean(boot_tails[0] < boot_tails[1], axis=0)
-            prc_ps[i_grp] = np.vstack((q_boot_ps, tail_boot_ps))
-
-        unames = np.unique(concat_df['names'])
-        for i_prctile, prctile in enumerate(prctiles):
-            ax = axs[i_grp, i_prctile + 1]
-            # keep_inds = np.logical_or.reduce([use_df.loc[use_df['names'] == mouse_name, use_diff]])
-            # keep_inds = []
-            cut_dict = {'diff': [], 'Percentile': np.repeat(prctile, len(unames) * len(abbr_labels)),
-                        'names': np.tile(unames, len(abbr_labels)), chunk_name: np.repeat(abbr_labels, len(unames))}
-            for abbr in abbr_labels:
-                #                 print(chunk_label)
-                for mouse_name in np.unique(concat_df['names']):
-                    diffs = concat_df.loc[
-                        np.logical_and(concat_df['names'] == mouse_name, concat_df[chunk_name] == abbr), 'diff']
-                    cut_dict['diff'].append(np.percentile(diffs, prctile))
-                    # keep_inds.append(np.logical_and.reduce(
-                    #     [concat_df['names'] == mouse_name, concat_df[chunk_name] == abbr,
-                    #      concat_df['diff'] > cut]))
-
-            # keep_inds = np.logical_or.reduce(keep_inds)
-            # prc_df = concat_df.iloc[keep_inds]
-            #             print(prc_df.keys())
-            # agg_df = prc_df.groupby(['names', 'genotype', chunk_name]).median().sort_values(
-            #     by=chunk_name, key=lambda series: [abbr_labels.index(x) for x in series]).reset_index()
-            #             print(agg_df)
-            agg_df = pd.DataFrame(cut_dict)
-            ax = plot_prctile(agg_df, ax, avg_spec, mouse_spec)
-            ax.spines['left'].set_position(("axes", -0.15))
-
-            if i_prctile == len(prctiles) - 1:
-                ax.legend(loc=(1.04, 0))
-            else:
-                ax.legend().remove()
-            ax.set_ylabel('')
-            if i_grp == 0:
-                ax.set_title(prctile)
-            if i_grp == len(decs_to_use) - 1:
-                ax.set_xticklabels(abbr_labels, rotation=45, ha='right', rotation_mode='anchor')
-            else:
-                ax.set_xticklabels([])
-                ax.set_xlabel('')
-
-            # the remaining tail won't be normally distributed, so it's invalid to use a LME model that assumes
-            # normally-distributed residuals. Use nonparametric test on medians instead
-            # formula = 'diff ~ C({})'.format(chunk_name)
-            # with warnings.catch_warnings():
-            #     warnings.simplefilter('ignore')
-            #     mfit = mixedlm(formula, prc_df, groups='names').fit(method=['powell', 'lbfgs'], maxiter=2000)
-            # #                 pval = mfit.summary().tables[1][-2:-1]['P>|z|'].values.astype(np.float64)
-            # #                 print(pval)
-            #
-            # # the above doesn't give enough sig figs, so copied the actual p-value computation from statsmodels source
-            # pval = compute_lme_pval(mfit)[-1]
-
-            #                 print(pval)
-
-            # this does the "Summarized" method from Saravanan et al., 2020, but throws out too much statistical power
-            # agg_df = agg_df.sort_values(by=['names', 'genotype', chunk_name])[['names', 'genotype', chunk_name, 'diff']]
-            # # print(agg_df)
-            # # [print(agg_df.loc[agg_df[chunk_name] == abbr_label, 'diff']) for abbr_label in abbr_labels]
-            # stat, pval = stats.ttest_rel(*[agg_df.loc[agg_df[chunk_name] == abbr_label, 'diff'] for abbr_label in abbr_labels])
-
-            plot_stars(ax, [.5], [prc_ps[i_grp, 0, i_prctile]])
-            plot_stars(ax, [.5], [prc_ps[i_grp, 1, i_prctile]], ytop_scale=1.1)
-
-            if prctile == solo_prctile:
-                prc_ax = prc_axs[0, i_grp]
-                prc_ax = plot_prctile(agg_df, prc_ax, avg_spec, mouse_spec)
-                prc_ax.set_xlabel('')
-                prc_ax.set_xticklabels(abbr_labels, rotation=45, ha='right', rotation_mode='anchor')
-                prc_ax.set_title(grp_key, pad=15)
-                prc_ax.spines['left'].set_position(("axes", -0.15))
-                if i_grp == 0:
-                    prc_ax.set_ylabel('auROC: Across - Within\nDistribution')
-                else:
-                    prc_ax.set_ylabel('')
-                if i_grp == len(decs_to_use) - 1:
-                    prc_ax.legend(loc=(1.04, 0))
-                else:
-                    prc_ax.legend().remove()
-
-            # prc_ps[i_grp, i_prctile] = pval
-            # prc_n[i_grp, i_prctile] = prc_df.shape[0] / len(class_labels)
-            chunk_avgs = agg_df.groupby(chunk_name).mean().reset_index()['diff']
-            #             print(chunk_avgs)
-            #             .sort_values(
-            #                     by=use_x, key=lambda series: [hue_order.index(x) for x in series])[use_diff].diff().values[-1]
-            #                 print(class_avgs)
-            prc_diff[i_grp, i_prctile] = chunk_avgs[0] - chunk_avgs[1]
-
-    print(prc_ps)
-
-    # do this after so that height of stars in the same
-    [plot_stars(prc_ax, [.5], [pval]) for prc_ax, pval in zip(prc_axs[0, :], prc_ps[:, 0, prctiles == solo_prctile])]
-    [plot_stars(prc_ax, [.5], [pval], ytop_scale=1.1) for prc_ax, pval in zip(prc_axs[0, :], prc_ps[:, 1, prctiles == solo_prctile])]
-    #     prc_fig.tight_layout()
-
-    hide_spines()
-
-    plt.figure(fig.number)
-    plt.savefig(
-        'neural_decoding/mouse_allgrps_{}_diff_{}_across_{}.pdf'.format('_'.join(these_aurocs), roi, chunk_name))
-    plt.savefig(
-        'neural_decoding/mouse_allgrps_{}_diff_{}_across_{}.png'.format('_'.join(these_aurocs), roi, chunk_name))
-
-    plt.figure(prc_fig.number)
-    plt.savefig(
-        'neural_decoding/mouse_allgrps_{}_diff_{}_across_{}_prctile_{}.pdf'.format('_'.join(these_aurocs), roi, chunk_name, solo_prctile))
-    plt.savefig(
-        'neural_decoding/mouse_allgrps_{}_diff_{}_across_{}_prctile_{}.png'.format('_'.join(these_aurocs), roi, chunk_name, solo_prctile))
-
-    return prctiles, prc_ps, prc_diff, prc_n
-
-
 def plot_prctile(agg_df, ax, avg_spec, mouse_spec):
     sns.pointplot(data=agg_df, ax=ax, **avg_spec)
     plt.setp(ax.lines, zorder=100)
@@ -4573,225 +3492,6 @@ def plot_prctile(agg_df, ax, avg_spec, mouse_spec):
     sns.lineplot(data=agg_df, ax=ax, **mouse_spec)
     ax.set_xlim(-.4, 1.4)
     return ax
-
-
-def compute_across_within_auroc_diff(neuron_info, dec_dict, class_name, class_labels, decs_to_use=['pair', 'cong', 'ccgp'],
-                                     these_aurocs=['all_auroc', 'null_auroc']):
-
-    for i_grp, grp_key in enumerate(decs_to_use):  # set order of iteration
-
-        grp = dec_dict['per'][grp_key]
-        print(grp['name'])
-
-        for use_auroc in these_aurocs:
-
-            # if 'across_dist_' + use_auroc not in grp:
-
-            grp['across_dist_' + use_auroc] = {}
-            grp['within_dist_' + use_auroc] = {}
-
-            use_diff = use_auroc + '_diff'
-            abbr = '_'.join([grp['name'], use_auroc.split('_')[0]])
-
-            grp[use_diff] = {}
-            neuron_info[abbr] = np.nan
-
-            for i_cls, class_label in enumerate(class_labels):
-
-                print(class_label)
-                inds = np.flatnonzero(neuron_info[class_name] == class_label)
-                # print(len(inds))
-
-                grp['across_dist_' + use_auroc][class_label] = np.array([], dtype=np.float64).reshape(len(inds), 0)
-                grp['within_dist_' + use_auroc][class_label] = np.array([], dtype=np.float64).reshape(len(inds), 0)
-
-                for i_key, key in enumerate(grp['keys']):
-                    if key in grp['within_dist_keys']:
-                        grp['within_dist_' + use_auroc][class_label] = np.concatenate(
-                            (grp['within_dist_' + use_auroc][class_label], grp[use_auroc][inds, i_key][:, np.newaxis]),
-                            axis=1)
-                    else:
-                        grp['across_dist_' + use_auroc][class_label] = np.concatenate(
-                            (grp['across_dist_' + use_auroc][class_label], grp[use_auroc][inds, i_key][:, np.newaxis]),
-                            axis=1)
-
-                grp[use_diff][class_label] = np.mean(grp['across_dist_' + use_auroc][class_label], axis=1) - \
-                                             np.mean(grp['within_dist_' + use_auroc][class_label], axis=1)
-                # print(grp[use_diff][class_label])
-                # print(abbr)
-                neuron_info.loc[inds, abbr] = grp[use_diff][class_label]
-
-#                 else:
-#                     # null_auroc for ccgp. Re-group the 6 ccgp pairings all different ways of 4 (meaningful,
-#                     # across-distriubtion) and 2 (null, within-distribution) and then consider the average of them
-#                     combos = list(itertools.combinations(range(len(grp['keys'])), 4))
-#                     n_combos = len(combos)
-#                     grp[use_diff][class_label] = np.zeros((len(inds), n_combos))
-
-#                     for i_combo, combo in enumerate(combos):
-
-#                         grp['across_dist_' + use_auroc][class_label] = np.array([], dtype=np.float64).reshape(len(inds), 0)
-#                         grp['within_dist_' + use_auroc][class_label] = np.array([], dtype=np.float64).reshape(len(inds), 0)
-
-#                         for i_key in combo:
-#                             grp['across_dist_' + use_auroc][class_label] = np.concatenate(
-#                                 (grp['across_dist_' + use_auroc][class_label], grp['all_auroc'][inds, i_key][:, np.newaxis]),
-#                                 axis=1)
-#                         not_in_combo = list(set(range(len(grp['keys']))) - set(combo))
-#                         for i_key in not_in_combo:
-#                             grp['within_dist_' + use_auroc][class_label] = np.concatenate(
-#                                 (grp['within_dist_' + use_auroc][class_label], grp['all_auroc'][inds, i_key][:, np.newaxis]),
-#                                 axis=1)
-#                         # print(grp['across_dist_' + use_auroc][class_label].shape, grp['within_dist_' + use_auroc][class_label].shape)
-#                         grp[use_diff][class_label][:, i_combo] = np.mean(grp['across_dist_' + use_auroc][class_label], axis=1) - \
-#                                                                  np.mean(grp['within_dist_' + use_auroc][class_label], axis=1)
-
-#                     # print(np.repeat(neuron_info.loc[inds, 'str_regions'].values, n_combos))
-#                     # print(grp[use_auroc + '_diff'][class_label][:10, 0])
-#                     # print(grp[use_auroc + '_diff'][class_label][0, :10])
-#                     # print(grp[use_auroc + '_diff'][class_label].flatten()[:10])
-#                     use_df = use_df.append(pd.DataFrame(data={class_name: itertools.repeat(class_label, len(inds) * n_combos),
-#                                                               'str_regions': np.repeat(neuron_info.loc[inds, 'str_regions'].values, n_combos),
-#                                                               use_diff: grp[use_diff][class_label].flatten()}), ignore_index=True)
-
-    return neuron_info, dec_dict
-
-
-def plot_auroc_by_class(class_name, class_labels, dec_dict, neuron_info, rois=['All Subregions'], chunk_colors=None,
-                        these_aurocs=['all_auroc', 'null_auroc'], decs_to_use=['pair', 'cong', 'ccgp'], titles=None,
-                        log=False):
-    assert len(class_labels) == 1 or len(rois) == 1  # can't handle both at the same time right now
-    if titles is None:
-        titles = decs_to_use
-    assert len(titles) == len(decs_to_use)
-    if not isinstance(these_aurocs, list):
-        these_aurocs = [these_aurocs]
-
-    klim = len(decs_to_use) - 1
-    fig, axs = plt.subplots(2, klim + 1, figsize=((klim + 1) * 2.75, 5))  # , sharex=True)
-    plt.tight_layout()
-
-    for i_grp, grp_key in enumerate(decs_to_use):  # set order of iteration
-
-        grp = dec_dict[grp_key]
-        print(grp['name'])
-
-        for use_auroc in these_aurocs:
-
-            use_diff = use_auroc + '_diff'
-            abbr = '_'.join([grp['name'], use_auroc.split('_')[0]])
-
-            if len(rois) > 1:
-                n_labels = len(rois)  # number of subregions
-                spec = dict(x=abbr, hue='str_regions', palette=chunk_colors, estimator='mean',
-                            errorbar=None, legend=False)
-                inds_union = np.logical_or.reduce([neuron_info['str_regions'] == roi for roi in rois])
-            else:
-                n_labels = len(class_labels)  # number of genotypes, lesion, etc.
-                spec = dict(x=abbr, hue=class_name, hue_order=class_labels, palette=chunk_colors)
-                inds_union = np.logical_or.reduce(
-                    [neuron_info[class_name] == class_label for class_label in class_labels])
-                if rois[0] != 'All Subregions':
-                    inds_union = np.logical_and(inds_union, neuron_info['str_regions'] == rois[0])
-
-            # use_df = pd.DataFrame(columns=[class_name, 'str_regions', abbr])
-            use_df = neuron_info[inds_union]
-
-            # print(use_df.shape)
-            ax = axs[0, i_grp]
-
-            # Distribution (KDE) plots
-            if use_auroc == 'all_auroc' or use_auroc == 'diff_auroc':
-                ax = sns.kdeplot(**spec, data=use_df, fill=True, common_norm=False, legend=False,
-                                 ax=ax)
-            elif use_auroc == 'null_auroc':
-                ax = sns.kdeplot(**spec, data=use_df, fill=False, alpha=.5, common_norm=False,
-                                 legend=False, ax=ax, ls='--')
-
-            # print(use_df[use_auroc + '_diff'])
-            ax.set_title(titles[i_grp], pad=12)
-            ax.set_xlabel('')
-            if i_grp > 0:
-                ax.set_ylabel('')
-
-            if log:
-                ax.set_yscale('log')
-                ax.set_ylim(1e-3, 1e1)
-
-            if class_name == 'lesion':
-                ax.set_xlim(-.5, .5)
-
-            ax = axs[1, i_grp]
-            if use_auroc == 'all_auroc' or use_auroc == 'diff_auroc':
-                sns.kdeplot(**spec, data=use_df, cumulative=True, common_norm=False, ax=ax)
-            elif use_auroc == 'null_auroc' and these_aurocs == ['null_auroc']:
-                sns.kdeplot(**spec, data=use_df, cumulative=True, common_norm=False, ax=ax,
-                            alpha=.5)
-            else:
-                sns.kdeplot(**spec, data=use_df, cumulative=True, common_norm=False, ax=ax,
-                            alpha=.5, legend=False)
-            if n_labels > 1 and i_grp == klim:
-                sns.move_legend(ax, loc=(1.04, 0))
-            else:
-                ax.legend([], [])
-            ax.set_xlabel('')
-            ax.axhline(y=0.5, ls='--', color='k')
-            if i_grp == 0:
-                ax.set_ylabel('Cumulative probability')
-            else:
-                ax.set_ylabel('')
-
-        print(grp['name'])
-
-        if len(rois) > 1:
-            # do comparison across rois
-            kruskal_stat, pval = stats.kruskal(
-                *[grp[use_diff][class_labels[0]][neuron_info['str_regions'] == roi] for roi in rois])
-        elif len(class_labels) == 1 and len(these_aurocs) == 2:  # and grp['name'] != 'ccgp':
-            # [print(neuron_info.loc[inds_union, use_auroc + '_diff']) for use_auroc in these_aurocs]
-            ks2_stat, pval = stats.ks_2samp(
-                *[neuron_info.loc[inds_union, abbr] for use_auroc in these_aurocs])
-            print(ks2_stat, pval)
-        #         elif len(class_labels) == 1 and len(these_aurocs) == 2 and grp['name'] == 'ccgp':
-        #             ks2_stat, pval = stats.ks_2samp(neuron_info.loc[inds_union, 'all_auroc_diff'], use_df['null_auroc_diff'])
-        elif len(class_labels) == 1 and len(these_aurocs) == 1:
-            if rois[0] != 'All Subregions':
-                rv = grp[use_diff][class_labels[0]][neuron_info['str_regions'] == rois[0]]
-            #                 wilcox_stat, pval = stats.wilcoxon(grp[use_auroc + '_diff'][class_labels[0]][neuron_info['str_regions'] == rois[0]])
-            else:
-                rv = grp[use_diff][class_labels[0]]
-            #                 wilcox_stat, pval = stats.wilcoxon(grp[use_auroc + '_diff'][class_labels[0]])
-            ks_stat, pval = stats.kstest(rv, lambda x: stats.norm.cdf(x, scale=np.std(rv)))
-        elif len(class_labels) > 1 and len(these_aurocs) > 1:
-            ks2_stat, pval = stats.ks_2samp(*[
-                neuron_info.loc[np.logical_and(inds_union, neuron_info[class_name] == class_label), 'all_auroc_diff']
-                for class_label in class_labels])
-        elif len(class_labels) > 1 and len(these_aurocs) == 1 and use_auroc == 'null_auroc':
-            # [print(use_df.loc[use_df[class_name] == class_label, 'null_auroc_diff']) for class_label in class_labels]
-            ks2_stat, pval = stats.ks_2samp(*[
-                use_df.loc[use_df[class_name] == class_label, 'null_auroc_diff'] for class_label in class_labels])
-        else:
-            # elif len(class_labels) == 2 and len(rois) == 1:
-            # rnksum_stat, pval = stats.ranksums(*[
-            #     neuron_info.loc[np.logical_and(inds_union, neuron_info[class_name] == class_label), use_auroc + '_diff']
-            #     for class_label in class_labels])
-            # print(rnksums)
-
-            ks2_stat, pval = stats.ks_2samp(*[
-                neuron_info.loc[np.logical_and(inds_union, neuron_info[class_name] == class_label), abbr]
-                for class_label in class_labels])
-
-        for ax in axs[:, i_grp]:
-            plot_stars(ax, [0], [pval])
-            ax.axvline(x=0, ymax=0.95, ls='--', color='k')
-
-    axs[1, klim // 2].set_xlabel('auROC: Across - Within Distribution')
-
-    hide_spines()
-    plt.savefig(
-        'neural_decoding/allgrps_{}_diff_{}_across_{}.pdf'.format('_'.join(these_aurocs), '_'.join(rois), class_name))
-    plt.savefig(
-        'neural_decoding/allgrps_{}_diff_{}_across_{}.png'.format('_'.join(these_aurocs), '_'.join(rois), class_name))
 
 
 def plot_dist_neurons(neuron_info, dist_neurons, timecourses, times, trace_dict, colors, n_trace_types, max_plot=200,
@@ -4929,39 +3629,6 @@ def compute_angles(dec_dict, neuron_info, cue_resps, protocol_info, components, 
                     pass
                 for key in grp['keys']:
                     for per_key in per_keys:
-                        # if all_mice:  # making pseudopopulations across mice
-                        #     coefs = grp['scores'][class_label][roi]['all_mice'][key][per_key][1]
-                        #     cell_inds = grp['scores'][class_label][roi]['all_mice'][key][per_key][2][-1]
-                        #
-                        #     # regress this particular population of cells onto value
-                        #     data = cue_resps[:, np.logical_and(class_inds, roi_inds)]
-                        #     sids = all_sids[np.logical_and.reduce([class_inds, roi_inds])]
-                        #
-                        #     # stat_angles = []
-                        #     # for stat in [means, vars]:
-                        #     #     stat_coefs = disjoint_regress(data, sids, means, cell_inds, train_per, test_per)
-                        #     #     stat_angles.append([angle_between(np.squeeze(coefs[-1, i_fold, :, :]), stat_coefs) for
-                        #     #                         i_fold in range(n_train)])
-                        #
-                        #     value_coefs = disjoint_regress(data, sids, means, cell_inds, train_per, test_per)
-                        #     value_angles = [angle_between(np.squeeze(coefs[-1, i_fold, :, :]), value_coefs) for i_fold in
-                        #                     range(n_train)]
-                        #     var_coefs = disjoint_regress(data, sids, vars, cell_inds, train_per, test_per)
-                        #     var_angles = [angle_between(np.squeeze(coefs[-1, i_fold, :, :]), var_coefs) for i_fold in
-                        #                   range(n_train)]
-                        #
-                        #     coef_angles = [[angle_between(np.squeeze(coefs[-1, i_fold, :, :]),
-                        #                                           components[class_label][i_comp][roi_inds[class_inds]][cell_inds]) for
-                        #                             i_fold in range(n_train)] for i_comp in range(n_components)]
-                        #
-                        #     angle_dict = extend_dicts(angle_dict, dec_key, 'all_mice', class_name, class_label, roi, key,
-                        #                               per_key, coef_angles, value_angles, var_angles)
-                        #
-                        #     value_pc1_angle = angle_between(components[class_label][0, roi_inds[class_inds]][cell_inds], value_coefs)
-                        #     var_pc2_angle = angle_between(components[class_label][1, roi_inds[class_inds]][cell_inds], var_coefs)
-                        #
-                        #     control_dict = extend_dicts(control_dict, dec_key, 'all_mice', class_name, class_label, roi,
-                        #                                 key, per_key, value_pc1_angle=value_pc1_angle, var_pc2_angle=var_pc2_angle)
 
                         for mouse_name in mice:
                             mouse_inds = neuron_info['names'] == mouse_name
@@ -4980,13 +3647,6 @@ def compute_angles(dec_dict, neuron_info, cue_resps, protocol_info, components, 
 
                                     data = cue_resps[:, np.logical_and.reduce([class_inds, roi_inds, mouse_inds])][:, class_reg_mouse_neuron_inds]
                                     sids = all_sids[np.logical_and.reduce([class_inds, roi_inds, mouse_inds])][class_reg_mouse_neuron_inds]
-                                    # print(mouse_coefs.shape, selected_comps.shape, data.shape, sids.shape)
-
-                                    # mouse_stat_angles = []
-                                    # for stat in [means, vars]:
-                                    #     mouse_stat_coefs = disjoint_regress(data, sids, stat, train_per=train_per, test_per=test_per)
-                                    #     mouse_stat_angles.append([angle_between(np.squeeze(mouse_coefs[-1, i_fold, :, :]),
-                                    #                                             mouse_stat_coefs) for i_fold in range(n_train)])
 
                                     mouse_value_coefs = disjoint_regress(data, sids, means, train_per=train_per, test_per=test_per, do_cv=False)
                                     # -1 is here because that corresponds to max_pop
@@ -5228,39 +3888,6 @@ def plot_decoder_angles(dec_dict, control_df, angle_df, class_name, class_labels
                                     raise NotImplementedError('Expected dec_keys to be the columns. Only run on one roi at a time')
                                     # plot_stars(g.axes[-1, i_roi], [i_grp], pval)
                             [plot_stars(g.axes[i_roi, i_key], [0.5], [grpp], ytop_scale=.9, show_ns=True) for g in g2]
-
-                # else:  # Not Supported
-                #     #             data = sub_df.groupby(['i_fold', 'dec_key', grp, class_name, 'roi']).agg({depvar: 'mean'}).reset_index()
-                #     #             g = sns.FacetGrid(data, col=class_name, col_order=class_labels, legend_out=True)
-                #     g.map(sns.stripplot, 'dec_key', depvar, grp, order=dec_dict.keys(), hue_order=use_keys,
-                #           dodge=True, palette=dec_dict['ccgp']['pooled_colors'])
-                #     #         g.add_legend()
-                #     #         sns.move_legend(g.axes.flat[-1], loc=(1.04, .5))
-                #     g.map(sns.pointplot, 'dec_key', depvar, grp, order=dec_dict.keys(), hue_order=use_keys,
-                #           join=False,
-                #           ci=95, capsize=.1, scale=.7, dodge=.58, palette=['k'] * 3, zorder=10, legend=False)
-                #
-                #     #             g = sns.stripplot(**spec, data=data, dodge=True, ax=ax, palette=dec_dict['ccgp']['pooled_colors'])
-                #     #             sns.pointplot(**spec, data=data, join=False, ci=95, capsize=.1, scale=.7, dodge=.58, palette=['k'] * 3,
-                #     #                           zorder=10, legend=False, ax=ax)
-                #
-                #     #  don't include the black dots in the legend
-                #     #             h, l = g.get_legend_handles_labels()
-                #     #             nlab = len(np.unique(data[grp]))
-                #     #             ax.legend(h[0:nlab], l[0:nlab], loc=(1.04, 0))
-                #     #             sns.move_legend(ax, loc=(1.04, 0))
-                #
-                #     # compute significance of across vs. within distribution. 95% conf ints tell us whether either is different
-                #     # from 90 degrees
-                #     for roi in rois:
-                #         for class_label in class_labels:
-                #             tres = [stats.ttest_1samp(data.loc[np.logical_and.reduce([
-                #                 data['dec_key'] == dec_key, data[grp] == grouping,
-                #                 data[class_name] == class_label, data['roi'] == roi]), depvar], popmean=0)
-                #                     for dec_key in dec_dict.keys() for grouping in use_keys]
-                #             all_ps.append([x[1] for x in tres])
-                #
-                #     xpos = (np.array([[-.25, .25]]) + np.arange(ng)[:, np.newaxis]).flatten()
 
                 for ig, g in enumerate(g2):
                     # g.set_ylabels('Angle between {}: Deviation\nfrom orthogonal ($\degree$)'.format(longname))

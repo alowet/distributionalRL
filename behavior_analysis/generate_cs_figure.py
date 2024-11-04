@@ -5,10 +5,8 @@ sys.path.append('../utils')
 from protocols import load_params
 plt.style.use('paper_export')
 
-protocols = ['SameRewDist', 'DistributionalRL_6Odours', 'Bernoulli', 'SameRewVar', 'SameVarReviewerSkewness', 'SameVarMaxSkewness']
-# protocols = ['SameVarMaxSkewness']
+protocols = ['SameRewDist', 'DistributionalRL_6Odours', 'Bernoulli', 'SameRewVar']  #, 'SameVarReviewerSkewness', 'SameVarMaxSkewness']
 max_ntt = 6
-# protocols = ['Bernoulli']
 fig, axs = plt.subplots(len(protocols), max_ntt, figsize=(max_ntt*1.3, len(protocols)*1.3), squeeze=False)
 
 for ip, protocol in enumerate(protocols):
@@ -52,8 +50,6 @@ for ip, protocol in enumerate(protocols):
 
 
 plt.tight_layout()
-# plt.subplots_adjust(top=0.88, bottom=.2, wspace=.05, hspace=1.25)
-# plt.subplots_adjust(top=0.88, bottom=.2, wspace=.15, hspace=.75)
-plt.savefig('/home/adam/Documents/dist-rl/docs/manuscript/fig_components/all_tasks.pdf')
-plt.savefig('/home/adam/Documents/dist-rl/docs/manuscript/fig_components/all_tasks.png', bbox_inches='tight')
+plt.savefig('/../behavior-plots/all_tasks.pdf')
+plt.savefig('/../behavior-plots/all_tasks.png', bbox_inches='tight')
 # plt.show()

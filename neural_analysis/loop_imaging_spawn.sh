@@ -53,14 +53,6 @@ for ret in rets:
   job_name = f"{ret['name']}_{ret['file_date_id']}"
   job_file = os.path.join(job_directory, f"{job_name}.job")
 
-#  # try loading the file to see if it contains spks_smooth
-#  fname = os.path.join(paths['neural_fig_roots'][0], ret['name'], ret['file_date_id'], job_name + '_Ca.p')
-#  with open(fname, 'rb') as f:
-#    d = pickle.load(f)
-#  if 'spks_smooth' in d:
-#    print('Found spks_smooth in {}. Skipping'.format(job_name))
-#    continue
-#  else:
   print('Running {}'.format(job_name))
 
   with open(job_file, 'w') as fh:

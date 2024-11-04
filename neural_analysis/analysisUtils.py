@@ -9,13 +9,12 @@ from scipy import stats, odr, linalg, spatial
 import cmocean
 import fitz
 import sys
-from sklearn.linear_model import Ridge, RidgeCV, LogisticRegression, LogisticRegressionCV
+from sklearn.linear_model import Ridge, RidgeCV, LogisticRegression
 from sklearn.metrics import confusion_matrix, silhouette_score, pairwise_distances
 from sklearn.model_selection import StratifiedKFold, cross_val_predict, cross_val_score, cross_validate
 from sklearn.mixture import GaussianMixture
 from sklearn.cluster import SpectralClustering
 from sklearn.decomposition import PCA
-from sklearn.manifold import MDS
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -28,7 +27,6 @@ import json
 
 from streams import DataStream
 
-# sys.path.append('../utils')
 sys.path.append('../utils')
 from db import get_db_info
 from plotting import add_cbar_and_vlines, set_share_axes, hide_spines, add_cbar, plot_confusion, plot_box
@@ -945,8 +943,6 @@ def temporal_lr(bin_centers, all_mats, all_trial_types, colors, exclude_tt, fpat
     # iterate over time bins, performing K-fold cross-validation in each bin
     n_splits = 4
     scoring = 'balanced_accuracy'
-    # name = 'Logistic Regression'
-    # clf = LogisticRegression(solver='newton-cg', multi_class='multinomial')
     name = 'Support Vector Machine'
     clf = SVC(C=reg_C)
     n_bins = len(bin_centers)
@@ -998,58 +994,6 @@ def temporal_lr(bin_centers, all_mats, all_trial_types, colors, exclude_tt, fpat
     plt.savefig(os.path.join(os.path.dirname(fpath), '_'.join([fparts[0], label, *nameparts]) + '.png'), bbox_inches='tight', dpi=500)
     return all_tmean
 
-# TODO: THIS DOESN'T WORK AS CURRENTLY WRITTEN WITH NORMALIZATION
-# def plot_decode(rescale, periods, protocol_info, taus, dec_axs, use_taus=None):
-#     """
-#     :param rescale: n_var_types x n_periods x n_use_cells array of rescaled responses
-#     :param periods: dictionary of info about periods to plot
-#     :param protocol_info: dictionary of info about protocol
-#     :param taus: taus to use for decoding
-#     :param dec_axs:  axes to plot on
-#     :param use_taus: mask for which cells/taus to use (boolean array)
-#     :return:
-#     """
-#     max_epochs = 3
-#     N = 20
-#     imputed_dists = np.zeros((periods['n_periods_to_plot'], len(periods['var_types']), max_epochs * N))
-#     if use_taus is None:
-#         use_taus = np.ones(taus.shape[0], dtype=bool)
-#
-#     for j, j_period in enumerate(periods['periods_to_plot']):
-#         for i, i_type in enumerate(periods['var_types']):
-#             # attempt distribution decoding
-#             ax = dec_axs[j, i]
-#             imputed_dist, fvl = run_decoding(rescale[i, j_period][use_taus], taus[use_taus],
-#                                              minv=0.0, maxv=1., max_epochs=3, N=20, max_samples=20000, method='TNC')
-#             plot_imputation(protocol_info['norm_dists'][i_type], imputed_dist, ax=ax)
-#             if j == 0:
-#                 ax.set_title('CS{}'.format(i_type))
-#             if i == 0:
-#                 ax.set_ylabel('Probability: ' + periods['period_names'][j_period])
-#             if j == periods['n_periods_to_plot'] - 1:
-#                 ax.set_xlabel('Norm. reward')
-#             ax.set_xlim(-0.2, 1.2)
-#             imputed_dists[j, i, :] = imputed_dist
-#
-#     return imputed_dists
-
-
-# def plot_RSA(X_mat, n_trial_types, period_names, period_inds=[1, 2, 3]):
-#     # Representational Similarity Analysis (RSA) over time
-#     fig, axs = plt.subplots(1, len(period_inds), figsize=(len(period_inds) * 4, 3))
-#     RSAs = np.zeros((len(period_inds), n_trial_types, n_trial_types))
-# #     RSAs = [[]] * len(period_inds)
-#     for i_per, period_ind in enumerate(period_inds):
-#         avg_responses = X_mat[:n_trial_types, :, period_ind]
-#         RSAs[i_per] = np.corrcoef(avg_responses, rowvar=True)
-#         np.fill_diagonal(RSAs[i_per], 0)
-#         ax = axs[i_per]
-#         im = ax.imshow(RSAs[i_per], vmin=-1, vmax=1, cmap=cmocean.cm.balance)
-#         ax.set_title(period_names[period_ind])
-
-#     add_cbar(fig, im, 'Correlation')
-#     return RSAs
-
 
 def plot_RDA(X_mat, n_trial_types, period_names, period_inds=[1, 2, 3], metric='euclidean'):
     # Representational Dissimilarity Analysis (RDA) over time
@@ -1070,19 +1014,6 @@ def plot_RDA(X_mat, n_trial_types, period_names, period_inds=[1, 2, 3], metric='
         ax.set_title(period_names[period_ind])
     add_cbar(fig, im, '{} distance'.format(metric.capitalize()))
     return RDAs
-
-
-def plot_MDS(X_mat, n_trial_types, period_names, colors, period_inds=[1, 2, 3]):
-    # Plot multi-dimensional scaling
-    fig, axs = plt.subplots(1, len(period_inds), figsize=(len(period_inds) * 4, 3))
-    for i_per, period_ind in enumerate(period_inds):
-        avg_responses = X_mat[:n_trial_types, :, period_ind]
-        embedded = MDS(n_components=2).fit_transform(avg_responses)
-        ax = axs[i_per]
-        ax.scatter(embedded[:, 0], embedded[:, 1], color=colors[:n_trial_types])
-        ax.set_title(period_names[period_ind])
-        ax.set_xticks([])
-        ax.set_yticks([])
 
 
 def print_neuron_info(neuron_info, subset):
@@ -1110,247 +1041,6 @@ def save_neuron_pdfs(neuron_info, subset, pdf_path, label, table='imaging'):
         session_pdf.close()
     neuron_pdf.save(pdf_path)
     neuron_pdf.close()
-
-
-# def pseudopop_decode(data, fig=1, pop_sizes=None, color=None, n_runs=20, ci=True, kern='linear'):
-#     """
-#     :param data: cues_resps or residual (n_trial_types x n_cells x max_n_trials array) OR, in the case of
-#     cross-condition generalization, (n_trial_types x n_cells x max_n_trials array x 2 array)
-#     :param fig: matplotlib figure to plot to
-#     :param pop_sizes: 1-D array of pseudopopulation sizes to use, or int, indicating number of sizes to use
-#     :param color: color to plot in
-#     :param n_runs: how many runs (with random subsets of data) to perform
-#     :param ci: whether to plot 95% CI as errorbars. If False, plot s.e.m. instead
-#     :param kern: kernel to use for SVC. {‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’} or callable, default=’linear’.
-#     See sklearn docs for details.
-#     :return:
-#     # since decoding performance isn't limited by noise correlations, combine cells from different recording sessions
-#     # into pseudopopulation and see how performance scales with number of neurons
-#     """
-#     n_splits = 4
-#     kfold = StratifiedKFold(n_splits=n_splits, shuffle=True)
-#
-#     # 'accuracy' is same as 'balanced accuracy' here b/c number of trials per type is same
-#     # clf = LogisticRegressionCV(Cs=5, cv=kfold, scoring='accuracy', solver='newton-cg', multi_class='multinomial', n_jobs=-1)
-#     clf = SVC(kernel=kern)
-#
-#     n_pseudo_trials_per_type = 100
-#
-#     n_cells = data.shape[1]
-#     if pop_sizes is None:
-#         n_sizes = 20
-#         pop_sizes = np.logspace(1, np.log10(n_cells), n_sizes).astype(np.int32)
-#     elif isinstance(pop_sizes, int):
-#         n_sizes = pop_sizes
-#         pop_sizes = np.logspace(1, np.log10(n_cells), n_sizes).astype(np.int32)
-#     else:
-#         n_sizes = len(pop_sizes)
-#
-#     pop_scores = np.full((len(pop_sizes), n_runs), np.nan)
-#     n_trial_types = data.shape[0]
-#
-#     # make sure that the number of grouped trial types is the same for each cell and for each trial type
-#     nanswitches = np.sum(np.diff(~np.isnan(data), axis=2) == 1, axis=2)
-#     assert np.all(nanswitches == nanswitches[0, 0])
-#     n_grouped_tts = nanswitches[0, 0] // 2 + 1  # each trial type is padded by nan afterwards
-#     #     print(n_grouped_tts)
-#
-#     # this will end up being the vector of correct classifications
-#     pseudo_types = np.repeat(np.arange(n_trial_types), n_pseudo_trials_per_type)
-#
-#     rng = np.random.default_rng(seed=1)
-#     for i_pop, pop_size in enumerate(pop_sizes):
-#
-#         for i_run in range(n_runs):
-#
-#             if pop_size < n_cells or i_run == 0:  # only run once for pop_size == total_cells to save time
-#
-#                 # pseudo_mat will (eventually) be an array of pseudotrials
-#                 pseudo_mat = np.zeros((n_pseudo_trials_per_type * n_trial_types, pop_size, 2))
-#
-#                 # each run of the decoder gets its own consistent pseudopopulation
-#                 rew_cells_to_use = np.random.choice(n_cells, size=pop_size, replace=False)
-#
-#                 # which of the grouped trial types to use in a given pseudotrial is shared across cells for this pseudopop
-#                 which_grouped_tt = rng.integers(n_grouped_tts, size=n_pseudo_trials_per_type)
-#                 #                 print(which_grouped_tt)
-#
-#                 for it, cell in enumerate(rew_cells_to_use):
-#                     # get all trials for this cell
-#                     trial_resps = data[:, cell]
-#                     #                     print(trial_resps.shape)
-#
-#                     # boolean array
-#                     trials_per_type = ~np.isnan(trial_resps)
-#                     #                     print(trials_per_type)
-#
-#                     #                     # If I want to lump grouped trial types together into the same pseudotrial
-#
-#                     #                     # indices of trials to use for each cell in this pseudotrial, ignoring nans
-#                     # trials = [rng.choice(np.arange(tt), size=n_pseudo_trials_per_type) for tt in
-#                     #           np.sum(trials_per_type, axis=1)]
-#                     # pseudo_mat[:, it] = np.concatenate([trial_resps[i_type, trials_per_type[i_type]][tt]
-#                     #                                     for i_type, tt in enumerate(trials)])
-#
-#                     # if we want to lump grouped trial types together into the same pseudotrial, and also
-#                     # use a separate test set of trials
-#
-#                     # indices of trials to use for each cell in this pseudotrial, ignoring nans
-#                     for i_partition in range(2):
-#                         trials = [rng.choice(np.arange(i_partition, tt, 2), size=n_pseudo_trials_per_type) for tt in
-#                                   np.sum(trials_per_type, axis=1)]
-#                         pseudo_mat[:, it, i_partition] = np.concatenate(
-#                             [trial_resps[i_type, trials_per_type[i_type]][tt] for i_type, tt in enumerate(trials)])
-#
-#                 #                         # If I want to keep each grouped trial type in its own pseudotrial:
-#                 #                         for i_group, group in enumerate(trials_per_type):
-#
-#                 #                             print(group)
-#
-#                 #                             # detect change points, and insert one at the beginning and end
-#                 #                             change_tts = np.insert(np.flatnonzero(np.diff(np.flatnonzero(group)) != 1), 0, 0)
-#                 #                             change_tts = np.insert(change_tts, len(change_tts), np.sum(group))
-#                 # #                             print(change_tts)
-#
-#                 #                             # randomly choose a trial from the specified grouped trial type. Will be different for each cell
-#                 #                             trials = np.zeros(n_pseudo_trials_per_type, dtype=np.int64)
-#                 #                             for tt in range(n_grouped_tts):
-#                 #                                 inds = which_grouped_tt == tt
-#                 #                                 trials[inds] = rng.choice(np.arange(change_tts[tt]+i_partition, change_tts[tt+1], 2), size=np.sum(inds))
-#
-#                 #                             # get only non-nan trial resps (group), then choose the trial index (tt) corresponding to that pseudotrial for each cell
-#                 #                             # and stuff into pseudo_mat
-#                 #                             pseudo_mat[i_group*n_pseudo_trials_per_type:(i_group+1)*n_pseudo_trials_per_type, it, i_partition] = \
-#                 #                                 trial_resps[i_group, group][trials]
-#
-#                 # #                             print(trials)
-#                 # #                             print(trial_resps[i_group, group][trials])
-#
-#                 # 'accuracy' is same as 'balanced accuracy' here b/c number of trials per type is same
-#                 # scores = cross_val_score(clf, pseudo_mat, pseudo_types, cv=kfold, scoring='accuracy', n_jobs=-1)
-#                 clf = clf.fit(pseudo_mat[..., 0], pseudo_types)
-#                 pop_scores[i_pop, i_run] = clf.score(pseudo_mat[..., 1], pseudo_types)
-#
-#                 if i_pop == n_sizes - 1 and i_run == 0:
-#                     # compute cv predictions, and thus the confusion matrix
-#                     y_pred = clf.predict(pseudo_mat[..., 1])
-#                     confusion = confusion_matrix(pseudo_types, y_pred)
-#
-#     # plot decoder accuracy as a function of included cells
-#     fig1 = plt.figure(fig)
-#     if ci:
-#         err = stats.sem(pop_scores, axis=1, nan_policy='omit') * 1.96
-#     else:
-#         err = stats.sem(pop_scores, axis=1, nan_policy='omit')
-#     plt.errorbar(pop_sizes, np.nanmean(pop_scores, axis=1), err,
-#                  fmt='.-', ms=10, elinewidth=2, lw=2, capsize=5, color=color, ecolor=color)
-#     # fmt='.-', ms=10, capsize=5, color=color, ecolor=color)
-#     plt.xlabel('Population size')
-#     plt.ylabel('Decoder accuracy')
-#     hide_spines()
-#
-#     fig2, ax = plt.subplots(num=rng.integers(low=1000, high=100000))
-#     im = plot_confusion(confusion, ax, 'Pseudopopulation', True)
-#     plt.ylabel('True Label')
-#     plt.colorbar(im)
-#
-#     return fig1, ax, pop_sizes, pop_scores
-#
-#
-# def heldout_decode(train, test, fig=1, pop_sizes=None, color=None, n_runs=20, ci=True, kern='linear'):
-#     """
-#     :param train: cues_resps or residual (n_trial_types x n_cells x max_n_trials array)
-#     :param test: cues_resps or residual (n_trial_types x n_cells x max_n_trials array)
-#     :param fig: matplotlib figure to plot to
-#     :param pop_sizes: 1-D array of pseudopopulation sizes to use, or int, indicating number of sizes to use
-#     :param color: color to plot in
-#     :param n_runs: how many runs (with random subsets of data) to perform
-#     :param ci: whether to plot 95% CI as errorbars. If False, plot s.e.m. instead
-#     :param kern: kernel to use for SVC. {‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’} or callable, default=’linear’.
-#     See sklearn docs for details.
-#     :return:
-#     # since decoding performance isn't limited by noise correlations, combine cells from different recording sessions
-#     # into pseudopopulation and see how performance scales with number of neurons
-#     """
-#     n_splits = 4
-#     kfold = StratifiedKFold(n_splits=n_splits, shuffle=True)
-#
-#     # 'accuracy' is same as 'balanced accuracy' here b/c number of trials per type is same
-#     # clf = LogisticRegressionCV(Cs=5, cv=kfold, scoring='accuracy', solver='newton-cg', multi_class='multinomial', n_jobs=-1)
-#     clf = SVC(kernel=kern)
-#
-#     n_pseudo_trials_per_type = 100
-#
-#     n_cells = train.shape[1]
-#     if pop_sizes is None:
-#         n_sizes = 20
-#         pop_sizes = np.logspace(1, np.log10(n_cells), n_sizes).astype(np.int32)
-#     elif isinstance(pop_sizes, int):
-#         n_sizes = pop_sizes
-#         pop_sizes = np.logspace(1, np.log10(n_cells), n_sizes).astype(np.int32)
-#     else:
-#         n_sizes = len(pop_sizes)
-#
-#     pop_scores = np.full((len(pop_sizes), n_runs), np.nan)
-#     n_trial_types = train.shape[0]
-#
-#     assert train.shape[0] == test.shape[0]
-#
-#     # make sure that the number of grouped trial types is the same for each cell and for each trial type
-#     nanswitches = np.sum(np.diff(~np.isnan(train), axis=2) == 1, axis=2)
-#     assert np.all(nanswitches == nanswitches[0, 0])
-#     n_grouped_tts = nanswitches[0, 0] // 2 + 1  # each trial type is padded by nan afterwards
-#     #     print(n_grouped_tts)
-#
-#     # this will end up being the vector of correct classifications
-#     pseudo_types = np.repeat(np.arange(n_trial_types), n_pseudo_trials_per_type)
-#
-#     rng = np.random.default_rng(seed=1)
-#     for i_pop, pop_size in enumerate(pop_sizes):
-#
-#         for i_run in range(n_runs):
-#
-#             if pop_size < n_cells or i_run == 0:  # only run once for pop_size == total_cells to save time
-#
-#                 # pseudo_mat will (eventually) be an array of pseudotrials
-#                 n_partitions = 1
-#                 train_mat = np.zeros((n_pseudo_trials_per_type * n_trial_types, pop_size))
-#                 test_mat = np.zeros((n_pseudo_trials_per_type * n_trial_types, pop_size))
-#
-#                 # each run of the decoder gets its own consistent pseudopopulation
-#                 rew_cells_to_use = np.random.choice(n_cells, size=pop_size, replace=False)
-#
-#                 # which of the grouped trial types to use in a given pseudotrial is shared across cells for this pseudopop
-#                 which_grouped_tt = rng.integers(n_grouped_tts, size=n_pseudo_trials_per_type)
-#                 #                 print(which_grouped_tt)
-#
-#                 for it, cell in enumerate(rew_cells_to_use):
-#
-#                     for input, mat in zip([train, test], [train_mat, test_mat]):
-#                         trial_resps = input[:, cell]
-#                         trials_per_type = ~np.isnan(trial_resps)
-#                         trials = [rng.choice(np.arange(tt), size=n_pseudo_trials_per_type) for tt in np.sum(trials_per_type, axis=1)]
-#                         mat[:, it] = np.concatenate([trial_resps[i_type, trials_per_type[i_type]][tt] for i_type, tt in enumerate(trials)])
-#
-#                 # 'accuracy' is same as 'balanced accuracy' here b/c number of trials per type is same
-#                 # scores = cross_val_score(clf, pseudo_mat, pseudo_types, cv=kfold, scoring='accuracy', n_jobs=-1)
-#                 clf = clf.fit(train_mat, pseudo_types)
-#                 pop_scores[i_pop, i_run] = clf.score(test_mat, pseudo_types)
-#
-#     # plot decoder accuracy as a function of included cells
-#     fig1 = plt.figure(fig)
-#     if ci:
-#         err = stats.sem(pop_scores, axis=1, nan_policy='omit') * 1.96
-#     else:
-#         err = stats.sem(pop_scores, axis=1, nan_policy='omit')
-#     plt.errorbar(pop_sizes, np.nanmean(pop_scores, axis=1), err,
-#                  fmt='.-', ms=10, elinewidth=2, lw=2, capsize=5, color=color, ecolor=color)
-#     # fmt='.-', ms=10, capsize=5, color=color, ecolor=color)
-#     plt.xlabel('Population size')
-#     plt.ylabel('Decoder accuracy')
-#     hide_spines()
-#
-#     return pop_scores
 
 
 def consolidate_decode(data, fig=1, pop_sizes=None, color=None, n_runs=30, ci=True, kern='linear', plot_mat=False,
@@ -1649,37 +1339,6 @@ def disjoint_decode(data, sids, n_splits=6, pop_sizes=None, kern='linear', train
     return pop_scores, coefs, cell_inds_all, confusions
 
 
-# def pack_pseudomat(n_trial_types, subt, train_splits, use_data, sid_inds, n_pseudo_trials_per_type, pseudo_mat,
-#                    cell_count, rng=np.random.default_rng(seed=1)):
-#     for i_type in range(n_trial_types):
-#         # get a random subset of trials on each session
-#         # type_folds = np.array_split(rng.permutation(np.arange(subt[i_type, 0])), train_splits)
-#         type_folds = np.array_split(rng.permutation(subt[i_type]), train_splits)
-#         for i_fold, fold in enumerate(type_folds):
-#             # for each subset (fold), put them in a random order the correct number of times
-#             perm_data = use_data[i_type, sid_inds][..., rng.choice(fold, n_pseudo_trials_per_type)]
-#             if train_splits == 1:  # in case of test set for ccgp or cross-temporal decodnig
-#                 i_fold = -1
-#             pseudo_mat[i_type * n_pseudo_trials_per_type:(i_type + 1) * n_pseudo_trials_per_type,
-#                 cell_count:cell_count + len(sid_inds), i_fold] = perm_data.T
-#     return pseudo_mat
-
-#
-# def get_X_y(X_full, y_dummy, ind, rng=np.random.default_rng(seed=1)):
-#
-#     nan_inds = np.isnan(X_full)
-#     for nan_mat in nan_inds:
-#         assert (nan_mat == nan_mat[0]).all()
-#
-#     X = X_full[ind, :, ~nan_inds[ind, 0]]
-#     y = y_dummy[~nan_inds[ind, 0]]
-#
-#     n_trials = y.shape[0]
-#     perminds = rng.choice(n_trials, size=100, replace=True)
-#
-#     return X[perminds], y[perminds]
-
-
 def scramble(a, axis=-1):
     """
     Return an array with the values of `a` independently shuffled along the
@@ -1722,28 +1381,11 @@ def simultaneous_decode(data, train_per, test_per, kern='linear', reg_C=1.0, do_
         clf = SVC(C=reg_C, kernel=kern, class_weight='balanced')
     else:
         clf = LogisticRegression(C=reg_C, max_iter=2000, multi_class='multinomial', class_weight='balanced')
-        # clf = LogisticRegressionCV(max_iter=2000, multi_class='multinomial', class_weight='balanced', n_jobs=-1)
 
     if do_zscore:
         pipeline = Pipeline([('transformer', scaler), ('estimator', clf)])
     else:
         pipeline = Pipeline([('estimator', clf)])
-
-    # if do_zscore:
-    #     #         print(train_data.shape)
-    #     tmp_nan = np.isnan(train_data)
-    #     train_reshape = np.swapaxes(train_data, 0, 1).reshape(n_cells, -1)  # axis 0 is now each cell/predictor
-    #     #         print(train_reshape.shape)
-    #     if len(train_data.shape) == 4:
-    #         train_means = np.nanmean(train_reshape, axis=1)[np.newaxis, :, np.newaxis, np.newaxis]
-    #         train_stds = np.nanstd(train_reshape, axis=1)[np.newaxis, :, np.newaxis, np.newaxis]
-    #     else:
-    #         train_means = np.nanmean(train_reshape, axis=1)[np.newaxis, :, np.newaxis]
-    #         train_stds = np.nanstd(train_reshape, axis=1)[np.newaxis, :, np.newaxis]
-    #     print('{} predictors have no variance. Replacing'.format(np.sum(train_stds == 0)))
-    #     train_stds[train_stds == 0] = 1  # in case where there's no variance, this won't be useful, just introduces nans
-    #     train_data = (train_data - train_means) / train_stds
-    #     test_data = (test_data - train_means) / train_stds  # use means computed on train data to normalize test data
 
     coefs = np.full((n_splits, int(n_trial_types * (n_trial_types - 1) / 2), n_cells), np.nan)
     confusion = None
@@ -1753,18 +1395,10 @@ def simultaneous_decode(data, train_per, test_per, kern='linear', reg_C=1.0, do_
     if len(train_data.shape) == 4:  # CCGP
 
         y = np.repeat(np.arange(n_trial_types), n_sample_trials)
-        # print(y)
-        # if shuffle:
-        #     rng.shuffle(y)
-            # print(y)
 
         notnan_inds = ~np.isnan(train_data)
         assert (np.all(notnan_inds[:, 0, np.newaxis, :] == notnan_inds))
         notnan_inds = notnan_inds[:, 0, :, :]  # shape (2, n_max_trials_per_type, 2), where dim 0 = class A or B and dim 2 = train vs. test
-
-        # n_trials = np.sum(~np.isnan(train_data), axis=2)
-        # assert (np.all(n_trials[:, 0, np.newaxis, :] == n_trials))
-        # n_trials = n_trials[:, 0, :]  # 2x2 matrix where dim 0 = class A or B and dim 1 = train vs. test
 
         X_full = np.zeros((n_trial_types, n_trial_types * n_sample_trials, n_cells))
         for i_tt in range(n_trial_types):
@@ -1784,40 +1418,20 @@ def simultaneous_decode(data, train_per, test_per, kern='linear', reg_C=1.0, do_
             X_full[0, :] = scramble(X_full[0, :], axis=0)  # (n_sample_trials * n_trial_types) x n_cells
             X_full[1, :] = scramble(X_full[1, :], axis=0)
 
-        # print(X_full)
-        # print(y)
         pipeline.fit(X_full[0, :], y)
         score = pipeline.score(X_full[1, :], y)
-
-        # # reshape array into (n_samples, n_features), i.e. (n_trials, n_neurons)
-        # X_train_full = train_data.transpose((3, 1, 0, 2)).reshape(n_trial_types, n_cells, n_trial_types * max_n_trials)
-        # X_test_full = test_data.transpose((3, 1, 0, 2)).reshape(n_trial_types, n_cells, n_trial_types * max_n_trials)
-        #
-        # X_train, y_train = get_X_y(X_train_full, y_dummy, 0)
-        # X_test, y_test = get_X_y(X_test_full, y_dummy, 1)
-        #
-        # clf.fit(X_train, y_train)
-        # score = clf.score(X_test, y_test)
 
         if kern == 'linear':
             coefs = pipeline.named_steps['estimator'].coef_
 
     elif len(train_data.shape) == 3:
-        #         print(train_data.shape)
-        y_dummy = np.repeat(np.arange(n_trial_types), max_n_trials)
-        # print(y_dummy)
-        # if shuffle:
-        #     rng.shuffle(y_dummy)
-            # print(y_dummy)
 
+        y_dummy = np.repeat(np.arange(n_trial_types), max_n_trials)
         X_train_full = train_data.transpose((1, 0, 2)).reshape(n_cells, n_trial_types * max_n_trials)
         nan_inds = np.isnan(X_train_full)
         assert (nan_inds == nan_inds[0]).all()
         if train_per == test_per:
-            # scores = cross_val_score(clf, X_train_full[:, ~nan_inds[0]].T, y_dummy[~nan_inds[0]], scoring=scoring,
-            #                          cv=cv)
-            # print(X_train_full[:, ~nan_inds[0]].T)
-            # print(y_dummy[~nan_inds[0]])
+
             X_train = X_train_full[:, ~nan_inds[0]].T
             # print(X_train[:5, :10])
             if shuffle:
@@ -1827,15 +1441,7 @@ def simultaneous_decode(data, train_per, test_per, kern='linear', reg_C=1.0, do_
             # print(X_train[:5, :10])
             cv_results = cross_validate(pipeline, X_train, y_dummy[~nan_inds[0]],
                                         scoring=scoring, cv=cv, return_estimator=True)
-            # if plot:
-            #     fig, axs = plt.subplots(1, 2, gridspec_kw={'width_ratios': [10, 1]})
-            #     perm_order = np.random.default_rng().permutation(np.sum(~nan_inds[0]))
-            #     axs[0].pcolormesh(stats.zscore(X_train_full[:, ~nan_inds[0]][:, perm_order].T, axis=0))
-            #     axs[0].axis('off')
-            #     axs[1].pcolormesh(y_dummy[~nan_inds[0]][perm_order].reshape(-1, 1))
-            #     axs[1].axis('off')
-            #     plt.savefig('regressor_mats/{}_{}_{}_{}.pdf'.format(label, kern, train_per, test_per))
-            # print(cv_results['test_score'])
+
             score = np.mean(cv_results['test_score'])
 
             try:
@@ -1951,14 +1557,9 @@ def parse_tsv(ret, neuron_info, inc_cells, kim_atlas=None):
             neuron_info['region_ids'].append(loc['brain_region_id'])
 
             # transform into Allen CCF coordinates
+            # bregma is hardcoded based on IBL convention
             if kim_atlas is not None:
                 ccf_coords = np.array([5400, 332, 5739]) - np.array([loc['y'], loc['z'], loc['x']])
-                # all_ccf_coords = np.concatenate((all_ccf_coords, ccf_coords.reshape(1, -1)), axis=0)
-                # ccf_coords = np.array([5800, 0, 5739]) - np.array([loc['y'], loc['z'], loc['x']])
-                # I'll resist modifying coordinates that show up as "lateral ventricle"
-                # kim = kim_atlas.structure_from_coords(ccf_coords, as_acronym=True, microns=True)
-                # if kim == 'LV':
-                #     ccf_coords = np.array([5400, 332, 5739]) - np.array([loc['y'], loc['z'], loc['x'] + 250])
                 neuron_info['kim_regions'].append(kim_atlas.structure_from_coords(ccf_coords, as_acronym=True, microns=True))
                 neuron_info['kim_region_ids'].append(int(kim_atlas.structure_from_coords(ccf_coords, microns=True)))
                 try:
@@ -2099,22 +1700,9 @@ def unit_vector(vector):
     """ Returns the unit vector of the vector.  """
     return vector / np.linalg.norm(vector)
 
+
 def angle_between(v1, v2):
     return spatial.distance.cosine(v1, v2)
-
-# def angle_between(v1, v2):
-#     """
-#     Returns the angle in radians between vectors 'v1' and 'v2'::
-#     angle_between((1, 0, 0), (0, 1, 0))
-#     1.5707963267948966
-#     angle_between((1, 0, 0), (1, 0, 0))
-#     0.0
-#     angle_between((1, 0, 0), (-1, 0, 0))
-#     3.141592653589793
-#     """
-#     v1_u = unit_vector(v1)
-#     v2_u = unit_vector(v2)
-#     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 
 def assign_str_regions_from_kim(neuron_info, kim_key='kim_regions'):
@@ -2138,14 +1726,6 @@ def assign_str_regions_from_kim(neuron_info, kim_key='kim_regions'):
         return regions
     else:
         neuron_info['str_regions'] = neuron_info[kim_key].copy()
-        # old way of assigning Chon atlas subregions to larger subregions
-        # regions = ['AcbC', ['LAcbSh', 'CB'], 'AcbSh',
-        #            ['CPi, vm, vm', 'CPi, vm, v', 'CPi, vm, cvm', 'CPr, imv'],
-        #            ['CPi, vl, vt', 'CPi, vl, cvl', 'CPi, vl, imv', 'CPr, l, vm'],
-        #            ['CPi, dm, cd', 'CPi, dm, dt', 'CPi, dm, dl', 'CPi, dm, im', 'CPr, imd', 'CPr, m'],
-        #            ['CPr, l, ls', 'CPi, dl, imd', 'CPi, dl, imd', 'CPi, dl, imd'], 'VP']
-        # reg_labels = ['core', 'lAcbSh', 'mAcbSh', 'vmCP', 'VLS', 'DMS', 'DLS', 'VP']
-        # for i_r, reg in enumerate(regions):
         for k, v in zip(regions.keys(), regions.values()):
             if type(v) == list:
                 val = np.array([np.any([subreg == x for subreg in v]) for x in neuron_info[kim_key]])
@@ -2206,9 +1786,6 @@ def construct_where_str(protocol, kw, table='imaging'):
                 where_str.append('NOT (' + ' OR '.join([f'({table}.name="{x}" AND {table}.file_date={y})' for x, y, in val]) + ')')
 
     where_str = ' AND '.join(where_str)
-    # if 'additional_names' in kw.keys():
-    #     where_str += ' OR ' + table + '.name IN ' + str(kw['additional_names'])
-    # where_vals = [x for x in kw.values() if type(x) == int]
 
     cols = ['session.name', 'session.exp_date', table + '.figure_path', 'behavior_path', 'file_date_id',
             table + '.file_date', table + '.processed_data_path', table + '.meta_time', 'ncells', 'stats',

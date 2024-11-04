@@ -1,5 +1,4 @@
-addpath('/home/adam/Documents/ephys/Variance_toolbox');
-addpath('/n/holystore01/LABS/uchida_users/Users/alowet/Variance_toolbox');
+addpath('../Variance_toolbox');
 % protocol = 'Bernoulli';
 protocol = 'SameRewDist';
 
