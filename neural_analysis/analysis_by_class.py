@@ -1383,6 +1383,9 @@ def make_dfs(class_name, class_labels, dec_dict, rois, by_mouse=True, pseudo=Tru
                         # new_df = 'pool_' + old_df
                         # if grp['name'] != 'odor':  # already included
                         grp[prefix_dfs]['pool'][per_key] = copy.deepcopy(disagg_df)
+                        use_grp = grp[prefix_dfs]['pool'][per_key][use_pop] if pseudo else grp[prefix_dfs]['pool'][per_key]
+
+                        use_grp = determine_grouping(grp, use_grp)
 
     return dec_dict
 
@@ -1690,6 +1693,8 @@ def plot_decode_by_class(class_name, class_labels, dec_dict, per_keys, rois=['Al
 
         for df_id, use_colors, use_keys in zip(['disagg', 'pool'], [grp['colors'], grp['pooled_colors']], [grp['keys'], grp['pooled_keys']]):
 
+            print(use_keys)
+
             cls_flag = True if grp['name'] == 'odor' or (grp['name'] == 'ccgp' and df_id == 'pool') else False
 
             row_name, row_order, col_name, col_order, hue, hue_order = get_row_col_hue(rois, class_name, class_labels, use_keys)
@@ -1712,6 +1717,9 @@ def plot_decode_by_class(class_name, class_labels, dec_dict, per_keys, rois=['Al
                 use_df = use_df[np.isin(use_df[class_name], class_labels)]
 
                 # print(use_df.shape, use_df)
+                # if df_id == 'pool':
+                #     print(use_df)
+                #     print(use_df.groupby(['Subregion', class_name, 'grouping', 'pop_id']).mean())
                 agg_df = use_df.groupby(['Subregion', class_name, 'grouping', 'pop_id']).mean().sort_values(
                     by='grouping', key=lambda series: [use_keys.index(x) for x in series]).reset_index()
                 agg_df['i_grouping'] = agg_df['grouping'].apply(lambda grping: use_keys.index(grping))
@@ -2929,7 +2937,7 @@ def get_save_dir(rem=False, beh=False):
     # elif rem:
     #     save_dir = 'neural_decoding/dist_removed/'
     else:
-        save_dir = 'neural_decoding'  #/all_neurons/'
+        save_dir = 'neural_decoding/'  #/all_neurons/'
 
     return save_dir
 

@@ -539,7 +539,7 @@ def get_mouse_colors(protocol, imaging=False):
     if imaging:
         mice_rets = select_db(paths['db'], 'session', 'name', 'protocol=? AND has_imaging=1 AND significance=1 AND has_facemap=1', (protocol.replace('DiverseDists', 'DistributionalRL_6Odours'),), unique=False)
     else:
-        mice_rets = select_db(paths['db'], 'session', 'name', 'protocol=? AND has_ephys=1 AND significance=1 AND has_facemap=1', (protocol.replace('DiverseDists', 'DistributionalRL_6Odours'),), unique=False)
+        mice_rets = select_db(paths['db'], 'session', 'name', 'protocol=? AND has_ephys=1 AND significance=1', (protocol.replace('DiverseDists', 'DistributionalRL_6Odours'),), unique=False)  # AND has_facemap=1
     all_mice = sorted(np.unique([ret['name'] for ret in mice_rets]))
 
     try:

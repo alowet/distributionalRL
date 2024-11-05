@@ -42,7 +42,7 @@ def get_db_info():
                                   '../../data/neural-plots'],
              'ephys_root': '../../data/ephys',
              'facemap_root': '../../data/camera',
-             'brainglobe_dir': '../../.brainglobe'
+             'brainglobe_dir': '../../data/.brainglobe'
              }
 
     for key in ['behavior', 'imaging', 'ephys', 'facemap', 'pupil']:

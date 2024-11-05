@@ -36,7 +36,17 @@ def get_mean_reflected(preds, half_preds, clamp_val):
     return np.mean(preds), preds
 
 
-def generate_model_predictions(protocol_info, colors, cat=True, n_components=2, noise_scale=5, plot_detail=False):
+def generate_model_predictions(protocol_info, colors, cat=True, n_components=2, noise_scale=5, plot_detail=False, subsets=['all']):
+    """
+    :param protocol_info:
+    :param colors:
+    :param cat:
+    :param n_components:
+    :param noise_scale:
+    :param plot_detail:
+    :param subsets: should be either ['all'] or ['all', 'pess', 'opt], in that order
+    :return:
+    """
 
     protocol = protocol_info['protocol']
     n_dup = 2 if 'Same' in protocol else 1
@@ -258,7 +268,7 @@ def generate_model_predictions(protocol_info, colors, cat=True, n_components=2, 
                       moment_activity]
 
     # subsets = ['all', 'pess', 'opt']
-    subsets = ['all']
+    # subsets = ['all']
     ns = len(subsets)
     code_order_to_pca = code_order  # ['Reflected Expectile', 'Reflected Quantile']
     nc = len(code_order_to_pca)
@@ -273,8 +283,8 @@ def generate_model_predictions(protocol_info, colors, cat=True, n_components=2, 
     all_dists = np.zeros((ns, nc, n_components, n_trace_types, n_trace_types))
     all_rda = np.zeros((ns, nc, n_trace_types, n_trace_types))
 
-    # for i_grp, (which_neurons, neuron_inds) in enumerate(zip(subsets, [0, pess_neurons, opt_neurons])):
-    for i_grp, which_neurons in enumerate(subsets):
+    for i_grp, (which_neurons, neuron_inds) in enumerate(zip(subsets, [0, pess_neurons, opt_neurons])):
+    # for i_grp, which_neurons in enumerate(subsets):
 
         # pre-allocate figures
         activities_to_pca = activities
