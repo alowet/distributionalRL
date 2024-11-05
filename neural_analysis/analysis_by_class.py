@@ -6,7 +6,6 @@ import cmocean
 import seaborn as sns
 from scipy import stats
 import pandas as pd
-import pingouin as pg
 from statsmodels.formula.api import ols, mixedlm
 from statsmodels.stats.anova import anova_lm, AnovaRM
 from statsmodels.stats.oneway import anova_oneway
@@ -15,6 +14,7 @@ from statsmodels.regression.mixed_linear_model import MixedLMResultsWrapper
 from numpy.linalg import LinAlgError
 
 # import scikit_posthocs as sp
+import pingouin as pg
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import pairwise_distances, roc_auc_score, balanced_accuracy_score
@@ -212,7 +212,7 @@ def plot_sig_frac_mouse_ttest(use_corrs, use_keys, class_name, class_labels, sig
         plot_stars(ax, np.arange(len(sign_labels)), ps)
 
     hide_spines()
-    [plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join([
+    [plt.savefig(os.path.join('..', 'neural-plots', '_'.join([
         protocol, 'mouse', '_'.join(use_keys), class_name, 'sig_fracs', 'sign', *sign_labels]) + fformat), bbox_inches='tight',
                  dpi=300)
      for fformat in ['.pdf', '.svg', '.png']]
@@ -326,7 +326,7 @@ def plot_sig_frac_sess_lme(diff_df, use_keys, class_name, sign_labels, mouse_col
         print(ps)
 
     hide_spines()
-    [plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join([
+    [plt.savefig(os.path.join('..', 'neural-plots', '_'.join([
         protocol, 'sess', '_'.join(use_keys), class_name, 'sig_fracs', 'sign', *sign_labels]) + fformat), bbox_inches='tight',
                  dpi=300)
      for fformat in ['.pdf', '.svg', '.png']]
@@ -454,7 +454,7 @@ def plot_sig_frac_sess_by_class(class_name, class_labels, mouse_time_df, mouse_f
                     if i_col == 0:
                         ax.set_ylabel(key)
 
-        [grid.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join([
+        [grid.savefig(os.path.join('..', 'neural-plots', '_'.join([
             which, protocol, class_name, 'keys', *use_keys, 'sign', sign, 'sig_fracs', activity_type]) + fformat), bbox_inches='tight', dpi=300)
          for fformat in ['.pdf', '.png'] for which, grid in zip(['time', 'lt'], [g1, g2])]
 
@@ -594,7 +594,7 @@ def plot_sig_frac_mouse_by_class(class_name, class_labels, corrs, trace_dict, co
             ax.spines['left'].set_position(("axes", -0.15))
 
         hide_spines()
-        [plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join([
+        [plt.savefig(os.path.join('..', 'neural-plots', '_'.join([
             protocol, key, class_name, 'sig_fracs', 'sign', *sign_labels, corr_name, activity_type]) + fformat), bbox_inches='tight', dpi=300)
          for fformat in ['.pdf', '.svg', '.png']]
 
@@ -668,9 +668,9 @@ def plot_shuff_bounds_by_class(class_name, class_labels, corrs, trace_dict, corr
             # fig.suptitle(class_label, y=1.05)
             hide_spines()
 
-            plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
+            plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
                 [class_name, class_label, 'shuff_bounds']) + '.pdf'), bbox_inches='tight')
-            plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
+            plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
                 [class_name, class_label, 'shuff_bounds']) + '.png'), bbox_inches='tight')
 
 
@@ -700,9 +700,9 @@ def plot_sig_frac_by_class(class_name, class_labels, corrs, trace_dict, corr_key
         ax.legend(labels=class_labels, loc=(1.04, 0))
 
         hide_spines()
-        plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
+        plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
             [protocol, class_name, 'sig_fracs', sign]) + '.pdf'), bbox_inches='tight')
-        plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
+        plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
             [protocol, class_name, 'sig_fracs', sign]) + '.png'), bbox_inches='tight')
 
     # fig.tight_layout()
@@ -1383,33 +1383,6 @@ def make_dfs(class_name, class_labels, dec_dict, rois, by_mouse=True, pseudo=Tru
                         # new_df = 'pool_' + old_df
                         # if grp['name'] != 'odor':  # already included
                         grp[prefix_dfs]['pool'][per_key] = copy.deepcopy(disagg_df)
-                        use_grp = grp[prefix_dfs]['pool'][per_key][use_pop] if pseudo else grp[prefix_dfs]['pool'][per_key]
-
-                        use_grp = determine_grouping(grp, use_grp)
-                        # if grp['name'] in ['odor', 'ccgp']:
-                        #     use_grp['grouping'] = grp['pooled_keys'][0]
-                        # else:
-                        #     is_within_dist = np.isin(use_grp['grouping'], grp['within_dist_keys'])
-                        #     use_grp.loc[is_within_dist, 'grouping'] = grp['pooled_keys'][1]
-                        #     use_grp.loc[~is_within_dist, 'grouping'] = grp['pooled_keys'][0]
-
-                        # else:
-                        #     is_within_dist = np.isin(grp[prefix_dfs]['pool'][per_key]['grouping'], grp['within_dist_keys'])
-                        #     grp[prefix_dfs]['pool'][per_key].loc[is_within_dist, 'grouping'] = 'Within distribution'
-                        #     grp[prefix_dfs]['pool'][per_key].loc[~is_within_dist, 'grouping'] = 'Across distribution'
-
-                # for per in grp['pers']:  # take subset of df with maximum population size and correct period
-                #     grp[prefix_dfs]['max_pop']['disagg'][per] = \
-                #         grp[prefix_dfs]['all'][(grp[prefix_dfs]['all']['period'] == per) & (grp[prefix_dfs]['all']['max_pop'])]
-                #
-                # # pool all the across-distribution decoding together and all the within-distribution decoding together
-                # disagg_dfs = grp[prefix_dfs]['max_pop']['disagg']
-                # for per, disagg_df in zip(disagg_dfs.keys(), disagg_dfs.values()):
-                #     # new_df = 'pool_' + old_df
-                #     grp[prefix_dfs]['max_pop']['pool'][per] = disagg_df.copy()
-                #     is_within_dist = np.isin(grp[prefix_dfs]['max_pop']['pool'][per]['grouping'], grp['within_dist_keys'])
-                #     grp[prefix_dfs]['max_pop']['pool'][per].loc[is_within_dist, 'grouping'] = 'Within distribution'
-                #     grp[prefix_dfs]['max_pop']['pool'][per].loc[~is_within_dist, 'grouping'] = 'Across distribution'
 
     return dec_dict
 
@@ -1641,16 +1614,6 @@ def run_lm(use_name, use_label, between, use_df, lme=False, test='lme', depvar='
         else:
             model = ols(formula, sub_df).fit()
             mfit = anova_lm(model, typ=3, robust='hc3')
-            # print(formula)
-            # print(anova_res)
-            # if use_name == 'genotype':  # mixed anova, since "genotype" is between subjects
-            # we're using this in the pseudopopulation case, where even though lesion and matched are recorded in the
-            # same subjects, those subjects are destroyed by the creation of pseudopopulations so it becomes a between factor
-            # mfit = pg.mixed_anova(data=sub_df, dv=depvar, within='grouping', subject='pop_id', between=between, correction=True)
-            # else:  # 2 way repeated measures, since both "lesion" and "grouping" are within-subjects
-            #     mfit = pg.rm_anova(data=sub_df, dv=depvar, within=['grouping', between], subject='pop_id', correction=True)
-            # mfit = pg.anova(data=sub_df, dv=depvar, between=['grouping', between], ss_type=3)
-            # print(mfit.round(3))
 
     return mfit
 
@@ -1672,10 +1635,6 @@ def run_stats_helper(class_name, class_labels, rois, use_df, stat_grp, df_id, ke
         # print('\n' + class_label)
         stat_grp[class_label]['between_roi'] = {}
         for roi in rois:
-            # print('\n' + roi)
-            # One-way ANOVA across groupings (since only one level of 'Subregion' factor)
-            # stat_grp[class_label][roi][df_id]['oneway'] = run_lm(class_name, class_label, 'Subregion', use_df[use_df['Subregion'] == roi])
-                # pg.anova(data=use_df[np.logical_and(use_df['Subregion'] == roi, use_df[class_name] == class_label)],
             if np.sum(use_df['Subregion'] == roi) > 0:
                 subr_df = use_df[use_df['Subregion'] == roi]
                 if len(subr_df) > len(keys):  # if n_train > 1. Otherwise, this comparison won't work
@@ -1689,24 +1648,6 @@ def run_stats_helper(class_name, class_labels, rois, use_df, stat_grp, df_id, ke
                     else:
                         model = ols('Accuracy ~ C(grouping)', subr_df).fit()
                     stat_grp[class_label][roi][df_id]['oneway'] = anova_lm(model, typ=3, robust='hc3')
-
-
-                #          dv='Accuracy', between='grouping', ss_type=3)
-            # inds = [np.logical_and.reduce([use_df[class_name] == class_label, use_df['Subregion'] == roi,
-            #                                use_df['grouping'] == grping]) for grping in use_keys]
-            # if not np.all([np.sum(x) == 0 for x in inds]):
-                # stat_grp[class_label][roi][df_id] = {}
-                # stat_grp[class_label][roi][df_id]['kruskal'] = stats.kruskal(
-                #     *[use_df[x]['Accuracy'] for x in inds])
-                # print('p_kruskal =', stat_grp[class_label][roi][df_id]['kruskal'][1])
-                # stat_grp[class_label][roi][df_id]['dunn'] = sp.posthoc_dunn(
-                #     [use_df[x]['Accuracy'] for x in inds])
-                # print(stat_grp[class_label][roi][df_id]['dunn'])
-                #
-                # if len(use_keys) == 2:
-                #     stat_grp[class_label][roi][df_id]['ranksums'] = stats.ranksums(
-                #         *[use_df[x]['Accuracy'] for x in inds])
-                #     print(stat_grp[class_label][roi][df_id]['ranksums'])
 
         # ANOVA across all rois/groupings for each class separately
         if len(rois) > 1:
@@ -1723,13 +1664,6 @@ def run_stats_helper(class_name, class_labels, rois, use_df, stat_grp, df_id, ke
             stat_grp[roi]['between_' + class_name][df_id] = run_lm('Subregion', roi, class_name, use_df)
         except ValueError:  # must have at least one row in constraint matrix
             pass
-        # else:
-        #     stat_grp[roi]['between_' + class_name][df_id] = \
-        #         pg.anova(data=use_df[np.logical_and(use_df['Subregion'] == roi, use_df[class_name] == class_label)],
-        #                  dv='Accuracy', between='grouping', ss_type=3)
-
-    # across all subregions/class_labels
-    # stat_grp = report_lm(class_name, class_labels, rois, use_df, stat_grp, df_id, lme=False)
 
     return stat_grp
 
@@ -2112,7 +2046,7 @@ def reduce(ret_df, neuron_info, X_means_norm, class_name, protocol_info, colors,
     for i_fig, fig in enumerate([fig1, *figcomps]):
         fig.tight_layout()
         hide_spines()
-        fig.savefig('../neural-plots/pooled/sessionwise_pca_{}_{}_{}_fig_{}.pdf'.format(protocol, class_name, activity_type, i_fig), bbox_inches='tight')
+        fig.savefig('../neural-plots/sessionwise_pca_{}_{}_{}_fig_{}.pdf'.format(protocol, class_name, activity_type, i_fig), bbox_inches='tight')
 
     return pairwise_dists, rda, session_avg_components, explained_var, sess_class_labels
 
@@ -2191,7 +2125,7 @@ def plot_scree(dists, rda, pca, class_name, class_labels, class_colors, prefix, 
                  palette=class_colors)
     plt.ylabel('Explained variance')
     hide_spines()
-    plt.savefig('../neural-plots/pooled/{}_{}_pca_scree_{}.pdf'.format(protocol, prefix, class_name), bbox_inches='tight')
+    plt.savefig('../neural-plots/{}_{}_pca_scree_{}.pdf'.format(protocol, prefix, class_name), bbox_inches='tight')
 
     return dists_avg, rda_avg
 
@@ -2261,8 +2195,8 @@ def reduce_pool_mice(neuron_info, use_cue_resps, class_name, class_labels, proto
         ax.set_zlabel('PC 3')
 
     hide_spines()
-    split_fig.savefig('../neural-plots/pooled/split_pca_{}_{}_{}.pdf'.format(protocol, class_name, activity_type), bbox_inches='tight')
-    pooled_fig.savefig('../neural-plots/pooled/pooled_pca_{}_{}_{}.pdf'.format(protocol, class_name, activity_type), bbox_inches='tight')
+    split_fig.savefig('../neural-plots/split_pca_{}_{}_{}.pdf'.format(protocol, class_name, activity_type), bbox_inches='tight')
+    pooled_fig.savefig('../neural-plots/pooled_pca_{}_{}_{}.pdf'.format(protocol, class_name, activity_type), bbox_inches='tight')
 
     pooled_avg, pooled_rdaavg = plot_scree(pooled_dists, pooled_rda, pooled_var, class_name, class_labels, class_colors, 'pooled', protocol)
 
@@ -2300,7 +2234,7 @@ def reduce_mouse_avg(neuron_info, X_means_norm, class_name, class_labels, mice, 
                     mousewise_pca, mousewise_var, mousewise_dists, axs, axs3, colors, rda_metric, n_components)
 
     hide_spines()
-    plt.savefig('../neural-plots/pooled/mousewise_pca_{}_{}.pdf'.format(protocol, class_name), bbox_inches='tight')
+    plt.savefig('../neural-plots/mousewise_pca_{}_{}.pdf'.format(protocol, class_name), bbox_inches='tight')
 
     mousewise_avg, mousewise_rdaavg = plot_scree(mousewise_dists, mousewise_rda, mousewise_var, class_name, class_labels, class_colors, 'mousewise', protocol)
 
@@ -2434,7 +2368,7 @@ def reduce_stats(pairwise_dists, mousewise_dists, pooled_dists, rda, mousewise_r
             # print(np.unique(pair_df[class_name]))
             # print(pair_df)
             # print(use_mouse_colors)
-            for key, label in zip(['mean', 'pair', 'odor', 'odor2'], ['mean', 'distribution', '', '']):
+            for key, label in zip(['mean', 'pair', 'odor'], ['mean', 'distribution', '']):  # ['odor2'], ['']):
 
                 print(dist_name, key, use_class_labels)
 
@@ -2546,10 +2480,10 @@ def reduce_stats(pairwise_dists, mousewise_dists, pooled_dists, rda, mousewise_r
                     g.set(ylabel=ylabel, title=dist_name)
                     g.fig.suptitle(' '.join(use_class_labels), y=1.1)
                     if behave:
-                        plt.savefig('../behavior-plots/pooled/{}_{}_{}_across_{}_{}_{}_behavior.pdf'.format(
+                        plt.savefig('../behavior-plots/{}_{}_{}_across_{}_{}_{}_behavior.pdf'.format(
                             protocol, dist_name, class_name, '_'.join(tmp_class_labels), key, label), bbox_inches='tight')
                     else:
-                        plt.savefig('../neural-plots/pooled/{}_{}_{}_across_{}_{}_{}_{}.pdf'.format(
+                        plt.savefig('../neural-plots/{}_{}_{}_across_{}_{}_{}_{}.pdf'.format(
                             protocol, dist_name, class_name, '_'.join(tmp_class_labels), key, label, activity_type), bbox_inches='tight')
 
 
@@ -2590,7 +2524,7 @@ def plot_masked_mat(avg, i_comp, start_tt, class_labels, name, protocol_info):
     add_cbar(fig, im, title, width=.03)
     #     plt.colorbar()
     hide_spines()
-    save_dir = '../behavior-plots/pooled' if 'behavior' in name else '../neural-plots/pooled/'
+    save_dir = '../behavior-plots' if 'behavior' in name else '../neural-plots'
     plt.savefig(os.path.join(save_dir, 'pca_pairwise_mat_{}_{}_{}_{}_comp_{}.pdf'.format(
         protocol, '_'.join(class_labels), start_tt, name, i_comp + 1)), bbox_inches='tight')
 
@@ -2992,10 +2926,10 @@ def plot_avg_confusion_mat_by_class(class_name, class_labels, dec_dict, per_keys
 def get_save_dir(rem=False, beh=False):
     if beh:
         save_dir = 'behavioral_decoding/'
-    elif rem:
-        save_dir = 'neural_decoding/dist_removed/'
+    # elif rem:
+    #     save_dir = 'neural_decoding/dist_removed/'
     else:
-        save_dir = 'neural_decoding/all_neurons/'
+        save_dir = 'neural_decoding'  #/all_neurons/'
 
     return save_dir
 
@@ -3236,7 +3170,7 @@ def plot_parallelism_interaction_by_class(class_name, ps_resps, periods, rois=['
     ps_df = {'disagg': disagg_df, 'pool': pool_df}
     ps_stats = {df_id: {roi: {per: {} for per in periods['periods_to_plot']} for roi in rois} for df_id in ['disagg', 'pool']}
 
-    save_dir = 'dist_removed/' if rem else 'all_neurons/'
+    # save_dir = ''  # 'dist_removed/' if rem else 'all_neurons/'
 
     for per in periods['periods_to_plot']:
 
@@ -3296,9 +3230,9 @@ def plot_parallelism_interaction_by_class(class_name, ps_resps, periods, rois=['
 
         title = '_'.join([periods['period_names'][per], use_subr])
 
-        plt.savefig(os.path.join('..', 'neural-plots', 'pooled', save_dir, '_'.join(
+        plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
             [class_name, 'per', title, df_id, 'pseudo', str(pseudo), df_id, activity_type, 'interaction', 'parallelism_score']) + '.pdf'), bbox_inches='tight')
-        plt.savefig(os.path.join('..', 'neural-plots', 'pooled', save_dir, '_'.join(
+        plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
             [class_name, 'per', title, df_id, 'pseudo', str(pseudo), df_id, activity_type, 'interaction', 'parallelism_score']) + '.png'), bbox_inches='tight')
 
     return ps_stats
@@ -3389,9 +3323,9 @@ def plot_parallelism_score_by_class(class_name, ps_resps, ps_shuff, periods, roi
         plot_stars(plt.gca(), xpos, ps_ps.flatten(), s=12)
 
         hide_spines()
-        plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
+        plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
             [class_name, 'per', title, 'parallelism_score']) + '.pdf'), bbox_inches='tight')
-        plt.savefig(os.path.join('..', 'neural-plots', 'pooled', '_'.join(
+        plt.savefig(os.path.join('..', 'neural-plots', '_'.join(
             [class_name, 'per', title, 'parallelism_score']) + '.png'), bbox_inches='tight')
 
 
