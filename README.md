@@ -2,6 +2,7 @@
 
 This repo contains the code for generating figures in Lowet et al. (in press). In order to run, it is also necessary to download the data from Zenodo, which should be placed in a directory alongside the code folder as follows:
 
+```
 ├── parent_dir
 │   ├── code
 │   ├── ├── neural_analysis
@@ -9,7 +10,7 @@ This repo contains the code for generating figures in Lowet et al. (in press). I
 │   ├── ├── ann_decoding
 │   ├── ├── ...
 │   ├── data
-
+```
 ## Organization
 
 The code is formatted as Jupyter notebooks. There are ten such notebooks, each located within the relevant subfolder.
