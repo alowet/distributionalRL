@@ -303,7 +303,7 @@ def get_session(beh_data_folder, day, time, table=None):
                 session_data['has_imaging'] = session_data[old_key]
         if table is None or session_data['has_' + table] == 1:
             print('inside')
-            # kludge for old days when Bpod was freezind and sometimes returning an empty list
+            # kludge for old days when Bpod was freezing and sometimes returning an empty list
             if 'quality' in session_data and isinstance(session_data['quality'], int):
                 datafile_names.append(os.path.join(beh_data_folder, df))
                 sessions.append(session_data)

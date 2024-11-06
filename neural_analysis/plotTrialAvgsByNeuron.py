@@ -38,7 +38,7 @@ def check_file(fullfile):
         except Exception as e:
             return False
 
-def plotTrialAvgsByNeuron(video_dir, plot=1):
+def plotTrialAvgsByNeuron(video_dir, plot=1, highlights=[]):
 
     plt.style.use('paper_export')
     # general parameters
@@ -54,7 +54,8 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
     temp_dir = get_temp_dir(db_dict, video_dir)
 
     # no matter if it's continuous or not, create a scratch directory (if on cluster) in order to make writing pdfs much faster
-    pdf_dir = get_pdf_dir(db_dict, video_dir)
+    # pdf_dir = get_pdf_dir(db_dict, video_dir)
+    pdf_dir = paths['imaging_root']
     check_dir(os.path.join(pdf_dir, 'tmp'))
     pdf_root = os.path.join(pdf_dir, 'tmp', db_dict['name'] + '_' + db_dict['file_date_id'])
 
@@ -102,12 +103,14 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
     n_trials_behavior = session_data['nTrials']
     print('Getting timestamps for mouse {}, day {}'.format(db_dict['name'], db_dict['file_date_id']))
     if db_dict['continuous']:
-        # confirm that it was in fact continuous acquisition
-        # if on_cluster():
-        tiff_lens, metadata_fs = count_scanimage_tiffs(temp_dir, i_tiffs=[0])
-        if tiff_lens[0] % 1000 != 0:  # with 2 channels it will be 2000 frames per TIFF, not 1000
-            raise_print(
-                'Length of first TIFF was not equal to 1000. Are you sure this was acquired in continuous mode?')
+        # this only works if the tiffs are there
+        # # confirm that it was in fact continuous acquisition
+        # # if on_cluster():
+        # tiff_lens, metadata_fs = count_scanimage_tiffs(temp_dir, i_tiffs=[0])
+        # if tiff_lens[0] % 1000 != 0:  # with 2 channels it will be 2000 frames per TIFF, not 1000
+        #     raise_print(
+        #         'Length of first TIFF was not equal to 1000. Are you sure this was acquired in continuous mode?')
+        metadata_fs = 15.2  # hardcode for publication, although in reality this was gotten from the file
         timestamps = get_timestamps(session_data, n_trials_behavior, n_trace_types, metadata_fs, fudge=fudge)
 
         n_trials = timestamps['last_trial'] - timestamps['first_trial']
@@ -427,6 +430,8 @@ def plotTrialAvgsByNeuron(video_dir, plot=1):
                                             timestamps['stim'] + timestamps['trace'])
                         # exclude_axs=single_trial_axes[:, exclude_tt])
                         iter_pdfs[0].savefig(single_trial_fig)
+                        if i_cell in highlights:
+                            plt.show(block=False)
                         plt.close(single_trial_fig)
 
                 # [x.close() for x in pdf, raster, pdfrew, rasterrew]
