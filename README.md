@@ -12,18 +12,18 @@ This repo contains the code for generating figures in Lowet et al. (in press). I
 
 ## Organization
 
-The code is formatted as Jupyter notebooks. There are nine such notebooks, each located within the relevant subfolder.
+The code is formatted as Jupyter notebooks. There are ten such notebooks, each located within the relevant subfolder.
 
-1. `neural_analysis/recording_figs.ipynb` plots neural recording data (mostly Figs. 2, 3, 4 and ED Figs. 2-4 and 6-8.
-2. `behavior_analysis/compare_optostim.ipynb` plot optogenetic stimulation data (Fig. 5 and ED Fig. 7a-m, 11). TODO
+1. `neural_analysis/recording_figs.ipynb` plots neural recording data (mostly Figs. 2, 3, 4 and ED Figs. 2-4, 6-8, and 10d-e.
+2. `behavior_analysis/compare_optostim.ipynb` plots optogenetic stimulation data (Fig. 5 and ED Fig. 7a-m, 11).
 3. `behavior_analysis/licking_all_sessions.ipynb` plots licking data (Fig. 1c, ED Fig. 1f-g, 8b, 10c).
 4. `behavior_analysis/behavioral_decoding.ipynb` plots (Fig. 1d, ED Fig. 1h, 9b-c).
-5. `ann_decoding/ann_decoding.ipynb` plots data from ANN-based decoding (ED Fig. 4f-l).
-6. `neural_analysis/glm_analysis.ipynb` plots data from ED Fig. 5 and 9d-f. TODO
-7. `behavioral_analysis/plot_facemap_components.ipynb` plots ED Fig. 1e.
-8. `neural_analysis/smooth_data.ipynb` plots Fig. 1f-g. TODO
-9. `neural_analysis/sample_data.ipynb` plots Fig. 1h, 4d,g. TODO
-
+5. `neural_analysis/plot_smoothed_data.ipynb` plots Fig. 1f-g., ED Fig. 2b, 10a-b
+6. `neural_analysis/sample_data.ipynb` plots Fig. 1h, 4d,g. TODO
+7. `neural_analysis/glm_analysis.ipynb` plots data from ED Fig. 5 and 9d-f. TODO
+8. `neural_analysis/fano.ipynb` plots Fano factor analysis (ED Fig. 6). TODO
+9. `ann_decoding/ann_decoding.ipynb` plots data from ANN-based decoding (ED Fig. 4f-l).
+10. `behavioral_analysis/plot_facemap_components.ipynb` plots ED Fig. 1e.
 
 ## Description of `data`
 

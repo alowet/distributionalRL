@@ -278,8 +278,8 @@ def label_heatmap(n_trial_types, trial_type_names, pcolor_time, timecourse, colo
         #     ax.set_ylim(*yscl)
     add_cbar_and_vlines(fig, im, 'Mean {}'.format(label), 3.)
     fname = datetime.today().strftime('%Y%m%d') + '_' + str(total_cells) + suffix
-    plt.savefig(os.path.join(paths['neural_fig_roots'][0], 'pooled', fname + '.png'), bbox_inches='tight', dpi=600)
-    # plt.savefig(os.path.join(paths['neural_fig_roots'][0], 'pooled', fname + '.pdf'), bbox_inches='tight')
+    plt.savefig(os.path.join(paths['neural_fig_roots'][0], fname + '.png'), bbox_inches='tight', dpi=600)
+    # plt.savefig(os.path.join(paths['neural_fig_roots'][0]', fname + '.pdf'), bbox_inches='tight')
 
 
 def get_activity_label(activity):
