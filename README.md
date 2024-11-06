@@ -20,7 +20,7 @@ The code is formatted as Jupyter notebooks. There are ten such notebooks, each l
 3. `behavior_analysis/licking_all_sessions.ipynb` plots licking data (Fig. 1c, ED Fig. 1f-g, 8b, 10c).
 4. `behavior_analysis/behavioral_decoding.ipynb` plots (Fig. 1d, ED Fig. 1h, 9b-c).
 5. `neural_analysis/plot_smoothed_data.ipynb` plots Fig. 1f-g., ED Fig. 2b, 10a-b
-6. `neural_analysis/sample_data.ipynb` plots Fig. 1h, 4d,g. TODO
+6. `neural_analysis/plot_sample_data.ipynb` plots Fig. 1h, 4d,g.
 7. `neural_analysis/glm_analysis.ipynb` plots data from ED Fig. 5 and 9d-f. TODO
 8. `neural_analysis/fano.ipynb` plots Fano factor analysis (ED Fig. 6). TODO
 9. `ann_decoding/ann_decoding.ipynb` plots data from ANN-based decoding (ED Fig. 4f-l).

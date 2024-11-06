@@ -49,6 +49,10 @@ def get_db_info():
         paths['_'.join(['remote', key, 'root'])] = paths['_'.join([key, 'root'])]
     for key in ['behavior_fig', 'neural_fig']:
         paths['_'.join(['remote', key, 'roots'])] = paths['_'.join([key, 'roots'])]
+
+    # for compatibility with database
+    paths['remote_behavior_root'] = '/n/holystore01/LABS/uchida_users/Users/alowet/behavior'
+
     return paths
 
 
@@ -63,12 +67,7 @@ def create_connection(db_file, il=True, uri=False):
     conn = None
     try:
         if db_file == 'my':
-            conn = mysql.connector.connect(
-                host='rcdb-user.rc.fas.harvard.edu',
-                user='alowet',
-                password='d72f4T6Xwz!1te',
-                database="alowet"
-            )
+            raise Exception("Not implemented in shared code")
         # 30 second timeout to handle concurrency better
         elif il:
             conn = sqlite3.connect(db_file, detect_types=sqlite3.PARSE_DECLTYPES, timeout=30, uri=uri)
@@ -278,7 +277,7 @@ def analyze_neural(data_dir, table):
 
     # get behavior data
     behavior = {}
-    behavior['dat'] = pickle.load(open(os.path.join(paths['behavior_fig_roots'][0], db_dict['name'],
+    behavior['dat'] = pickle.load(open(os.path.join(paths['behavior_fig_roots'][1], db_dict['name'],
                                                     str(db_dict['file_date']), behavior_filename + '.p'), 'rb'))
 
     names_tosave = {'foldernames': foldernames_tosave, 'filenames': filenames_tosave}
@@ -288,7 +287,7 @@ def analyze_neural(data_dir, table):
 
 def get_session(beh_data_folder, day, time, table=None):
     print(beh_data_folder, day, time, table)
-    session = glob.glob(beh_data_folder + '/*' + day + '*.mat')
+    session = [os.path.basename(x) for x in glob.glob(beh_data_folder + '/*' + day + '*.mat')]
     datafile_names = []
     sessions = []
     file_times = []
@@ -306,7 +305,7 @@ def get_session(beh_data_folder, day, time, table=None):
             print('inside')
             # kludge for old days when Bpod was freezind and sometimes returning an empty list
             if 'quality' in session_data and isinstance(session_data['quality'], int):
-                datafile_names.append(df)
+                datafile_names.append(os.path.join(beh_data_folder, df))
                 sessions.append(session_data)
                 if 'exp_time' in session_data:
                     file_times.append(session_data['exp_time'])
