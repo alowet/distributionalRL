@@ -8,9 +8,13 @@ This repo contains the code for generating figures in Lowet et al. (in press). I
 │   ├── ├── neural_analysis
 │   ├── ├── behavior_analysis
 │   ├── ├── ann_decoding
+│   ├── ├── envs
 │   ├── ├── ...
 │   ├── data
 ```
+
+The necessary conda environment for running the code is available in `envs/environment.yml`. For `glm_analysis`, the `tf.yml` file environment can be used instead, though it requires a GPU.
+
 ## Organization
 
 The code is formatted as Jupyter notebooks. There are ten such notebooks, each located within the relevant subfolder.
@@ -21,8 +25,8 @@ The code is formatted as Jupyter notebooks. There are ten such notebooks, each l
 4. `behavior_analysis/behavioral_decoding.ipynb` plots (Fig. 1d, ED Fig. 1h, 9b-c).
 5. `neural_analysis/plot_smoothed_data.ipynb` plots Fig. 1f-g., ED Fig. 2b, 10a-b
 6. `neural_analysis/plot_sample_data.ipynb` plots Fig. 1h, 4d,g.
-7. `neural_analysis/glm_analysis.ipynb` plots data from ED Fig. 5 and 9d-f. TODO
-8. `neural_analysis/compare_fano.ipynb` plots Fano factor analysis (ED Fig. 6). TODO
+7. `neural_analysis/glm_analysis.ipynb` plots data from ED Fig. 5 and 9d-f.
+8. `neural_analysis/compare_fano.ipynb` plots Fano factor analysis (ED Fig. 6).
 9. `ann_decoding/ann_decoding.ipynb` plots data from ANN-based decoding (ED Fig. 4f-l).
 10. `behavioral_analysis/plot_facemap_components.ipynb` plots ED Fig. 1e.
 
@@ -46,3 +50,5 @@ At the topmost level, `data` contains the SQLITE database with information about
 - 'n_psth_bins': len(psth_bin_centers)
 - 'n_periods': equal to 5, the number of periods used, each 1 s long (Baseline, Odor, Early Trace, Late Trace, Outcome)
 - 'total_cells': number of cells, len(neuron_info)
+
+Other directories contain intermediate stages of processing which are sometimes accessed from the `code` folder but will be less useful on their own.

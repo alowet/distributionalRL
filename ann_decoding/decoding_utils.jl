@@ -36,7 +36,7 @@ import NNlib
 # import Plots
 import Pickle
 
-folder_path = "/home/adam/Documents/dist-rl/code/PPC_DDC_Quantile_Expectile_Comparison"
+folder_path = "../../data/ann_decoding"
 
 function myunpickle(filename)
     r = nothing
