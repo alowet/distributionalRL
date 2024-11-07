@@ -1,6 +1,6 @@
 # distributionalRL
 
-This repo contains the code for generating figures in Lowet et al. (in press). In order to run, it is also necessary to download the data from Zenodo, which should be placed in a directory alongside the code folder as follows:
+This repo contains the code for generating figures in Lowet et al. (in press). In order to run, it is also necessary to download the data from Zenodo, which should be placed in a directory alongside the code folder as follows (this repo is equivalent to the `code` folder):
 
 ```
 ├── parent_dir
