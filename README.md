@@ -22,7 +22,7 @@ The code is formatted as Jupyter notebooks. There are ten such notebooks, each l
 5. `neural_analysis/plot_smoothed_data.ipynb` plots Fig. 1f-g., ED Fig. 2b, 10a-b
 6. `neural_analysis/plot_sample_data.ipynb` plots Fig. 1h, 4d,g.
 7. `neural_analysis/glm_analysis.ipynb` plots data from ED Fig. 5 and 9d-f. TODO
-8. `neural_analysis/fano.ipynb` plots Fano factor analysis (ED Fig. 6). TODO
+8. `neural_analysis/compare_fano.ipynb` plots Fano factor analysis (ED Fig. 6). TODO
 9. `ann_decoding/ann_decoding.ipynb` plots data from ANN-based decoding (ED Fig. 4f-l).
 10. `behavioral_analysis/plot_facemap_components.ipynb` plots ED Fig. 1e.
 

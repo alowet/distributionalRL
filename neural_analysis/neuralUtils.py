@@ -326,6 +326,7 @@ def get_timestamps(session_data, n_trials, n_trace_types, meta_fs=None, tiff_cou
 def count_scanimage_tiffs(video_dir, i_tiffs=None):
     tiff_lens = []
     filenames = []
+    print(video_dir)
     for filename in os.listdir(video_dir):
         if filename.endswith('.tif'):
             filenames.append(filename)
@@ -347,15 +348,15 @@ def count_scanimage_tiffs(video_dir, i_tiffs=None):
 
 
 def get_temp_dir(db_dict, video_dir):
-    if on_cluster() and not db_dict['continuous']:
-        # rsync data over to scratch first, because will be loading in a bunch of tiffs (not strictly necessary, but do it
-        # because we don't want to 100% trust Bpod
-        scratch_data_folder = os.path.join(os.environ['SCRATCH'], 'uchida_lab', 'alowet', 'imaging', db_dict['name'])
-        check_dir(scratch_data_folder)
-        subprocess.call(['rsync', '-avx', '--progress', video_dir, scratch_data_folder])
-        temp_dir = os.path.join(scratch_data_folder, db_dict['file_date_id'])
-    else:
-        temp_dir = video_dir
+    # if on_cluster() and not db_dict['continuous']:
+    #     # rsync data over to scratch first, because will be loading in a bunch of tiffs (not strictly necessary, but do it
+    #     # because we don't want to 100% trust Bpod
+    #     scratch_data_folder = os.path.join(os.environ['SCRATCH'], 'uchida_lab', 'alowet', 'imaging', db_dict['name'])
+    #     check_dir(scratch_data_folder)
+    #     subprocess.call(['rsync', '-avx', '--progress', video_dir, scratch_data_folder])
+    #     temp_dir = os.path.join(scratch_data_folder, db_dict['file_date_id'])
+    # else:
+    temp_dir = video_dir
     return temp_dir
 
 

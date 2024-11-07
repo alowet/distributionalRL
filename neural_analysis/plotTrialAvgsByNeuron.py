@@ -199,8 +199,9 @@ def plotTrialAvgsByNeuron(video_dir, plot=1, highlights=[]):
         zF_store = None
         dFF_store = None
 
-        for i_deconv, deconv in enumerate([True, False, False]):
-
+        # for i_deconv, deconv in enumerate([True, False, False]):
+        for i_deconv, deconv in enumerate([True]):
+            #  just plot deconvolved activity
             if deconv:  # equivalent to spks.npy
                 # I tested this with the baseline method used here; deconvolution works way better with the maximin
                 # method that is suite2p's default, as does zF

@@ -43,7 +43,7 @@ structData = cell(1, n_tt);
 Results = cell(n_sessions, n_tt);
 start_cell = 0;
 
-for i_ret=100:size(fetchedData, 1)
+for i_ret=1:size(fetchedData, 1)
 % for i_ret=1:2
     
     disp(['Structuring session ' num2str(i_ret)]);
@@ -104,7 +104,7 @@ for i_ret=100:size(fetchedData, 1)
 %     start_cell = start_cell + n_neurons*n_trace_types;
     close all;
 end
-% save(fullfile(savedir, [protocol '_results.mat']), 'Results');
+save(fullfile(savedir, [protocol '_results.mat']), 'Results');
 
 % % COMPUTE FANO FACTOR ETC
 % times = 500:50:5500;
