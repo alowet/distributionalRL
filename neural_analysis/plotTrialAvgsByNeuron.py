@@ -102,6 +102,7 @@ def plotTrialAvgsByNeuron(video_dir, plot=1, highlights=[]):
     # get trial info from behavior file
     n_trials_behavior = session_data['nTrials']
     print('Getting timestamps for mouse {}, day {}'.format(db_dict['name'], db_dict['file_date_id']))
+    metadata_fs = 15.2  # hardcode for publication, although in reality this was gotten from the file
     if db_dict['continuous']:
         # this only works if the tiffs are there
         # # confirm that it was in fact continuous acquisition
@@ -110,7 +111,6 @@ def plotTrialAvgsByNeuron(video_dir, plot=1, highlights=[]):
         # if tiff_lens[0] % 1000 != 0:  # with 2 channels it will be 2000 frames per TIFF, not 1000
         #     raise_print(
         #         'Length of first TIFF was not equal to 1000. Are you sure this was acquired in continuous mode?')
-        metadata_fs = 15.2  # hardcode for publication, although in reality this was gotten from the file
         timestamps = get_timestamps(session_data, n_trials_behavior, n_trace_types, metadata_fs, fudge=fudge)
 
         n_trials = timestamps['last_trial'] - timestamps['first_trial']
@@ -118,10 +118,12 @@ def plotTrialAvgsByNeuron(video_dir, plot=1, highlights=[]):
 
 
     else:
-        # load image data
-        # print('Loading TIFFs in ' + temp_dir)
-        # total_tiffs = count_scanimage_tiffs(temp_dir)
-        tiff_lens, metadata_fs = count_scanimage_tiffs(temp_dir, i_tiffs=None)
+        # # load image data
+        # # print('Loading TIFFs in ' + temp_dir)
+        # # total_tiffs = count_scanimage_tiffs(temp_dir)
+        # tiff_lens, metadata_fs = count_scanimage_tiffs(temp_dir, i_tiffs=None)  # don't count scanimage tiffs to avoid large file upload
+        # # np.save(os.path.join(temp_dir, '_'.join([db_dict['name'], db_dict['file_date_id'], 'tiff_lens.npy'])), tiff_lens)
+        tiff_lens = np.load(os.path.join(temp_dir, '_'.join([db_dict['name'], db_dict['file_date_id'], 'tiff_lens.npy'])))
         # tiff_counts = np.floor_divide(total_tiffs, n_chan)
         # these should be the same, but take the minimum just in case, and print a warning
         n_trials_imaging = len(tiff_lens)
