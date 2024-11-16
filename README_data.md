@@ -60,20 +60,20 @@ This folder contains files with ephys and imaging data for the various protocols
 
 Files ending with 'spks.sav' (e.g. `SameRewDist_ephys_combined_striatum_spks.sav`) are the most important. They contain a `dict` with the following keys:
 
-- 'all_spk_cnts': an array of spike counts binned every 250 ms, shape (n_trial_types, total_cells, max_n_trials_per_type, n_psth_bins). max_n_trials_per_type was set to 90; unused trials are np.nan. n_trial_types = n_trace_types + 1, as it includes  Unexpected Reward trials.
-- 'cue_resps': an array of spike counts binned every 1 s, shape (n_trace_types, total_cells, max_n_trials_per_type, n_prerew_periods). n_prerew_periods = n_periods - 1 = 4, as it excludes Outcome.
-- 'X_means': an array of trial-average firing rates, shape (n_trial_types, total_cells, n_periods)
-- 'cell_stds': standard deviation of each cell's firing rate, shape (n_trial_types, total_cells, n_periods)
-- 'neuron_info': dictionary (for pickling purposes) which can and should be restructured as a DataFrame using pd.DataFrame(neuron_info) with shape (total_cells, 23). Contains information like mouse, coordinates, mean, std, `class_name`, and striatal subregion (str_regions) for each neuron in `all_spk_cnts`, `cue_resps`, etc. in order. See documentation for `glm` folder for more information.
-'late_trace_ind': equal to 3, which period index (e.g. of `X_means` or `cue_resps`) corresponds to the Late Trace period
-- 'n_trace_types': protocol-specific, usually 6 (for 6 odors used), but sometimes 5 (e.g. Bernoulli task), for the number of odors with trace periods
-- 'psth_bin_width': 250 ms, bin width for PSTH
-- 'psth_bin_centers': centers of PSTH bins
-- 'corrs': correlations with e.g. mean, reward, rpe, etc, computed at psth_bin_width with psth_bin_centers
-- 'corrs_seconds': correlations with e.g. mean, reward, rpe, etc, computed during each period (seconds)
-- 'n_psth_bins': len(psth_bin_centers)
-- 'n_periods': equal to 5, the number of periods used, each 1 s long (Baseline, Odor, Early Trace, Late Trace, Outcome)
-- 'total_cells': number of cells, len(neuron_info)
+- `all_spk_cnts`: an array of spike counts binned every 250 ms, shape (n_trial_types, total_cells, max_n_trials_per_type, n_psth_bins). max_n_trials_per_type was set to 90; unused trials are np.nan. n_trial_types = n_trace_types + 1, as it includes  Unexpected Reward trials.
+- `cue_resps`: an array of spike counts binned every 1 s, shape (n_trace_types, total_cells, max_n_trials_per_type, n_prerew_periods). n_prerew_periods = n_periods - 1 = 4, as it excludes Outcome.
+- `X_means`: an array of trial-average firing rates, shape (n_trial_types, total_cells, n_periods)
+- `cell_stds`: standard deviation of each cell's firing rate, shape (n_trial_types, total_cells, n_periods)
+- `neuron_info`: dictionary (for pickling purposes) which can and should be restructured as a DataFrame using pd.DataFrame(neuron_info) with shape (total_cells, 23). Contains information like mouse, coordinates, mean, std, `class_name`, and striatal subregion (str_regions) for each neuron in `all_spk_cnts`, `cue_resps`, etc. in order. See documentation for `glm` folder for more information.
+- `late_trace_ind`: equal to 3, which period index (e.g. of `X_means` or `cue_resps`) corresponds to the Late Trace period
+- `n_trace_types`: protocol-specific, usually 6 (for 6 odors used), but sometimes 5 (e.g. Bernoulli task), for the number of odors with trace periods
+- `psth_bin_width`: 250 ms, bin width for PSTH
+- `psth_bin_centers`: centers of PSTH bins
+- `corrs`: correlations with e.g. mean, reward, rpe, etc, computed at psth_bin_width with psth_bin_centers
+- `corrs_seconds`: correlations with e.g. mean, reward, rpe, etc, computed during each period (seconds)
+- `n_psth_bins`: len(psth_bin_centers)
+- `n_periods`: equal to 5, the number of periods used, each 1 s long (Baseline, Odor, Early Trace, Late Trace, Outcome)
+- `total_cells`: number of cells, len(neuron_info)
 
 Second, and also important, are files containing 'dec_dict'. These contain data pertaining to the decoding analyses: CCGP, pairwise decoding, congruency, mean, and odor. Each file is a (highly nested) dictionary with two keys, `per` and `bin`. `per` is binned at (4) 1 second periods (Baseline, Odor, Early Trace, Late Trace), while `bin` is binned at (24) 250 ms periods, spanning from 1 s prior to odor delivery to 2 s after reward delivery. Call the length of these `n_periods` (either 4 or 24). While these data are included, it is also possible to regenerate them (perhaps with different random seeds) using the data above and the included code.
 
@@ -132,9 +132,9 @@ The file 'SameRewDist_facemap_decoding_104_9853e89f4e8252dc9d707f95c8909d05.p' i
 - `bin_resps`: array of shape `(n_trace_types, n_predictors, max_n_trials_per_type, n_bins)`, as above but containing the average predictor (e.g. facemap component) during each 250 ms bin of each trial
 - `rewards`: array of shape `(n_trace_types, n_predictors, max_n_trials_per_type)` containing the amount of reward delivered in each trial
 - `beh_info`: pandas DataFrame of shape `(n_predictors, 4)` containing these columns:
-- - 'names': mouse name
-- - 'file_date_id': recording date
-- - 'fig_paths': path to file, not operable but can be used to uniquely identify session
+- - `names`: mouse name
+- - `file_date_id`: recording date
+- - `fig_paths`: path to file, not operable but can be used to uniquely identify session
 - - `class_name`: either 'helper' (for standard condition) or 'lesion' (for 6-OHDA experiment, identifying 'control' or 'lesioned' mice)
 - `ret_df`: pandas DataFrame of shape `(n_sessions, 42)` containing relevant entries from `session` table of database.
 
