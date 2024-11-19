@@ -423,6 +423,8 @@ def plotTrialAvgsByNeuron(video_dir, plot=1, highlights=[]):
                         hide_spines()
                         raster_fig.subplots_adjust(wspace=0, hspace=0)
                         iter_pdfs[1].savefig(raster_fig, bbox_inches='tight')
+                        if i_cell in highlights:
+                            plt.show(block=False)
                         plt.close(raster_fig)
 
                         # adjust plot layout
@@ -433,8 +435,6 @@ def plotTrialAvgsByNeuron(video_dir, plot=1, highlights=[]):
                                             timestamps['stim'] + timestamps['trace'])
                         # exclude_axs=single_trial_axes[:, exclude_tt])
                         iter_pdfs[0].savefig(single_trial_fig)
-                        if i_cell in highlights:
-                            plt.show(block=False)
                         plt.close(single_trial_fig)
 
                 # [x.close() for x in pdf, raster, pdfrew, rasterrew]
