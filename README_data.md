@@ -1,6 +1,14 @@
-# Introduction 
+# Data from: An opponent striatal circuit for distributional reinforcement learning
 
-This `data` folder is meant to be located at the same level of the folder hierarchy as `code`. Files should then be found automatically by the `code` scripts. Here is an example:
+[https://doi.org/10.5061/dryad.80gb5mm0m](https://doi.org/10.5061/dryad.80gb5mm0m)
+
+## Description of the data and file structure
+
+We trained thirsty mice in a classical conditioning task in which random odors were paired with different probability distributions over water amounts. Behavior was monitored using an IR lick sensor, a face camera, and a body camera, and non-licking behavioral variables were extracted using Facemap. We recorded from neurons in the anterior striatum using acute Neuropixels probes and registered each cell to the Allen Common Coordinate Framework. In a subset of mice, we injected 6-hydroxydopamine unilaterally into the lateral nucleus accumbens shell (lAcbSh) before training to lesion dopamine axons projecting to this region, and then recorded after training. Separately, we recorded specifically from lAcbSh neurons expressing either the D1 or D2 dopamine receptor using two-photon calcium imaging in transgenic mice. Finally, we expressed excitatory (CoChR) or inhibitory (GtACR1) opsins in these cell types and measured changes in licking induced by optogenetic stimulation.
+
+## Introduction 
+
+This `data` folder is meant to be located at the same level of the folder hierarchy as `code`. Files should then be found automatically by the `code` scripts, hosted by Zenodo: [https://doi.org/10.5281/zenodo.14172350](https://doi.org/10.5281/zenodo.14172350). Here is an example:
 
 ```
 ├── parent_dir
@@ -45,7 +53,7 @@ Several abbreviations are commonly used in many file names. These include the fo
 - 'combined' (no manipulation, or combining neurons from fully intact animals and the control hemisphere of lesioned animals. In the case of 'imaging', this combines both D1 and A2a-Cre animals, which will be labeled and disaggregated elsewhere)
 - '6-OHDA' (contrasts control vs. lesioned hemispheres in the 6-OHDA dopamine lesion experiments)
 
-## Useful variable names
+### Useful variable names
 
 This README.md document will make frequent use of the following variable names, which are described here:
 
@@ -53,7 +61,7 @@ This README.md document will make frequent use of the following variable names, 
 - `n_trial_types`: `n_trace_types + 1`, since this includes the Unexpected Reward trial type
 
 
-# `neural-plots`
+## `neural-plots`
 
 
 This folder contains files with ephys and imaging data for the various protocols, mostly used by `neural_analysis/recording_figs.ipynb`. There are three types of files.
@@ -122,7 +130,7 @@ Finally, files ending with 'spks_smooth' or 'firing' contain the smoothed data n
 - - `time`: array of shape (6000,), containing `pcolor_time_full[:-1]`
 - `timecourses`: array of shape `(n_trial_types, total_cells, 6000)`, containing the average response of each neuron to each trial type across `time`. In this case the averaging has been performed on smoothed timecourses.
 
-# `behavior-plots`
+## `behavior-plots`
 
 This folder contains processed data from the example mice/sessions used in Fig. 1h and 4d,g. It also contains several combined data files used for facemap decoding (e.g. Fig. 1d) ond quantification of optogenetic effects (Fig. 5).
 
@@ -156,7 +164,7 @@ Lastly, the files beginning with 'compare_opto' contain information from optogen
 - `next_stim_loc`: `stim_loc` during the subsequent trial
 - `next_trial_type`: trial type of subsequent trial
 
-# `ann_decoding`
+## `ann_decoding`
 
 The folders 'decoding_SameRewDist_pseudo', 'decoding_SameRewDist_pseudo_restrictedSameMean', and 'decoding_SameRewDist_pseudo_transfer' contain the results of running the relevant scripts contained in the 'code/ann_decoding' folder. These scripts depend on the file 'SameRewDist_combined_spks_data_20230918.p', also contained in this folder. This contains a dictionary with the following fields:
 
@@ -168,7 +176,7 @@ The folders 'decoding_SameRewDist_pseudo', 'decoding_SameRewDist_pseudo_restrict
 - - `diff_coef_arr`: an array of shape `(total_cells, 2)`. For 'ccgp', this is just the average over gropuings. Otherwise, it is the difference in the average of Across $-$ Within distribution groupings, averaged again over CV folds.
 - `cutoff`: an array of the cutoffs tested and put into `neuron_info`. 73 was used. 
 
-# `behavior`
+## `behavior`
 
 This folder contains two types of files.
 
@@ -187,7 +195,7 @@ The second type of file begins with 'var_licking' (e.g. 'var_licking_SameRewDist
 
 Also included in this folder are several subfolders, for mouse subjects 'AL39', 'AL60', and 'AL65'. At the bottom of each of these directory trees is raw data from a single recording session (e.g. 'AL39_SameRewDist_20210930_111035.mat'), used in `neural_analysis/plot_sample_cells.ipynb`. This is not important for understanding the analysis here. For detailed description, see the Bpod documentation. 
 
-# `camera`
+## `camera`
 
 This folder contains data from a single example session, mouse 'AL41' on day '20211102', hence 'AL41_20211102_proc.npy'. It is used in `behavior_analysis/plot_facemap_components.ipynb` and contains the output of facemap processing. It is a numpy object array with the following important fields, copied from the [facemap documentation](https://facemap.readthedocs.io/en/stable/outputs.html). Details for others can be obtained from the facemap documentation.
 
@@ -197,15 +205,15 @@ This folder contains data from a single example session, mouse 'AL41' on day '20
 - `motSVD`:  list of motion SVDs - first is “multivideo SVD” (empty if not computed) - each is of size number of frames by number of components (50)
 - `running`: list of running ROI outputs - each is nframes x 2, for X and Y motion on each frame
 
-# `ephys`
+## `ephys`
 
 This contains a directory tree with structure `mouse_name/filedate/channel_locations.json`. Each `channel_locations.json` file is the output from the IBL atlas-electrophysiology pipeline, after registering the depth of the probe insertion to the allen CCF using electrophysiological coordinates.  These files can be used to reconstruct all probe penetrations.
 
-# `fano`
+## `fano`
 
 Within the 'cv1.0' (cutoff used to include cells being a coefficient of variation of 1.0 across ten chunks of the recording session; see Methods) folder and protocol-specific folders, the `{protocol}_results.mat` file contains the output of `Variance_toolbox`. It is a cell array called Results with shape `(n_sessions, n_trace_types)`. Each cell is a struct containing the `Variance_toolbox` output for an individual session and trial type (odor). This struct contains field-value pairs, where each value has length `n_neurons` recorded during that section. Documentation is available [here](https://www.dropbox.com/scl/fo/uoqaoli4mrd7w6j95y8ko/AMq2G-M6Y5OUBNKX6zSRf4E?rlkey=hlsaw999h4p9ijhsycmc1aizt&e=1&dl=0).
 
-# `glm`
+## `glm`
 
 This folder contains three types of files.
 
@@ -300,6 +308,6 @@ The last file type ends in 'glm_fit_table.sav', and it stores the fitting result
 
 The last seven columns (those beginning with `expectiles`) are then each repeated four times, for the models in which `licking`, `motor`, `history`, and `reward` regressors are dropped out instead.
 
-# `imaging`
+## `imaging`
 
 This folder contains three subfolders: 'AL60', 'AL65', and 'tmp' (the latter of which is empty). The subject-specfic folders contain the outputs of suite2p on three example sessions, which are used for plotting the individual example neurons in Fig. 4. Refer to the suite2p documentation for details.
