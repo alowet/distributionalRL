@@ -108,7 +108,7 @@ Each of these contains their own nested dictionary with keys `ccgp`, `pair`, `co
 - - - - - - - For pseudopopulation decoding, the order is `[pop_scores, coefs, cell_inds_all, confusions]`. `pop_scores` is an array of shape `(n_pseudopop_sizes, n_cv_splits)`, with `pseudopop_sizes` in increasing order; `coefs` is an array of shape `(n_pseudopop_sizes, n_cv_splits, n_pairs, n_cells)` containing the learned classifier weights for each neuron in the (linear) classifier in each CV fold, as above; `cell_inds_all` is an object array of shape `(n_pseudopop_sizes,)`, where each element is itself a Boolean array of length `n_cells` indicating whether or not a given cell was included in that (randomly-sampled) pseudopopulation; and `confusions` is an array of shape `(n_pseudopop_sizes, n_cv_splits, n_trace_types, n_trace_types)` containing the confusion matrices for each pseudopopulation and CV split.
 
 
-Finally, files ending with 'spks_smooth' or 'firing' contain the smoothed data necessary for plotting (in `neural_analysis/plot_smoothed_data.ipynb`). This is also a `dict` with the following fields:
+Third, files ending with 'spks_smooth' or 'firing' contain the smoothed data necessary for plotting (in `neural_analysis/plot_smoothed_data.ipynb`). This is also a `dict` with the following fields:
 
 - `neuron_info`: as above
 - `n_trace_types`: as above
@@ -130,9 +130,11 @@ Finally, files ending with 'spks_smooth' or 'firing' contain the smoothed data n
 - - `time`: array of shape (6000,), containing `pcolor_time_full[:-1]`
 - `timecourses`: array of shape `(n_trial_types, total_cells, 6000)`, containing the average response of each neuron to each trial type across `time`. In this case the averaging has been performed on smoothed timecourses.
 
+Finally, in addition to these files, there are three subfolders corresponding to the three subjects whose data are specifically plotted in `neural_analysis/plot_sample_data.ipynb` (e.g. `AL60`). These subfolders start out either empty or with several .png files; they will be fully populated after running the code in this notebook. These subfolders are not created automatically in the code, so it will throw an error if they are deleted.
+
 ## `behavior-plots`
 
-This folder contains processed data from the example mice/sessions used in Fig. 1h and 4d,g. It also contains several combined data files used for facemap decoding (e.g. Fig. 1d) ond quantification of optogenetic effects (Fig. 5).
+This folder contains processed data from the example mice/sessions used in Fig. 1h and 4d,g. It also contains several combined data files used for facemap decoding (e.g. Fig. 1d) and quantification of optogenetic effects (Fig. 5).
 
 The file 'SameRewDist_facemap_decoding_104_9853e89f4e8252dc9d707f95c8909d05.p' is used in `behavior_analysis/behavior_decoding.ipynb`. It contains the following fields:
 
@@ -163,6 +165,16 @@ Lastly, the files beginning with 'compare_opto' contain information from optogen
 - `next_licks`: lick rate during the subsequent trial (np.nan if last trial)
 - `next_stim_loc`: `stim_loc` during the subsequent trial
 - `next_trial_type`: trial type of subsequent trial
+
+Similar to `neural-plots`, there are also three subfolders corresponding to the three subjects whose data are specifically plotted in `neural_analysis/plot_sample_data.ipynb` (e.g. `AL60`). These subfolders (and their session-specific sub-subfolders) contain a single pickle file with processed behavioral data from that session. This file contains a dictionary with the following keys:
+
+- `stats`: a dictionary containing the results of statistical tests performed on that entire session's data
+- `licks_smoothed`: an array of shape `(n_trials, 35000)` containing smoothed licking traces on each trial, after binning at 1 ms resolution and spanning from -6 to 30 s, aligned to odor onset at 0 s. Traces were convolved with a Gaussian window with SD = 5 ms.
+- `licks_raw`: an array of shape `(n_trials, 35000)` containing unsmoothed lick counts on each trial, after binning at 1 ms resolution and spanning from -6 to 30 s, aligned to odor onset at 0 s.
+- `active_types`: list containing trial types that appeared during that session (e.g. [0, 1, 2, 3, 4, 5, 6], where 6 corresponds to Unexpected Reward)
+- `trial_types`: int array of shape `(n_trials,)` containing trial type for each trial in order
+- `time`: array of shape `(35000,)`, giving the timebase for `licks_raw` and `licks_smoothed`
+- `sr`: sampling rate in Hz, e.g. 1000 (corresponding to ms resolution)
 
 ## `ann_decoding`
 
@@ -207,11 +219,13 @@ This folder contains data from a single example session, mouse 'AL41' on day '20
 
 ## `ephys`
 
-This contains a directory tree with structure `mouse_name/filedate/channel_locations.json`. Each `channel_locations.json` file is the output from the IBL atlas-electrophysiology pipeline, after registering the depth of the probe insertion to the allen CCF using electrophysiological coordinates.  These files can be used to reconstruct all probe penetrations.
+This contains a directory tree with structure `mouse_name/filedate/channel_locations.json`. Each `channel_locations.json` file is the output from the IBL atlas-electrophysiology pipeline, after registering the depth of the probe insertion to the allen CCF using electrophysiological coordinates.  It contains x (ML), y (AP) and z (DV) coordinates in micrometers relative to bregma, along with the allen CCF brain region IDs of this coordinate. These files can be used to reconstruct all probe penetrations. 
 
 ## `fano`
 
 Within the 'cv1.0' (cutoff used to include cells being a coefficient of variation of 1.0 across ten chunks of the recording session; see Methods) folder and protocol-specific folders, the `{protocol}_results.mat` file contains the output of `Variance_toolbox`. It is a cell array called Results with shape `(n_sessions, n_trace_types)`. Each cell is a struct containing the `Variance_toolbox` output for an individual session and trial type (odor). This struct contains field-value pairs, where each value has length `n_neurons` recorded during that section. Documentation is available [here](https://www.dropbox.com/scl/fo/uoqaoli4mrd7w6j95y8ko/AMq2G-M6Y5OUBNKX6zSRf4E?rlkey=hlsaw999h4p9ijhsycmc1aizt&e=1&dl=0).
+
+In addition to `{protocol}_results.mat`, there may also be subfolders (e.g. `AL39/20211001`) containing .png files with the results of the `Variance_toolbox` analysis on particular mice and sessions. Each unique .png is for a different trial type (odor). Those with 'scatter' in the name show the Fano factor analysis for a particular time slice, as in Churchland et al., 2010, Fig. 4b. Those with 'tt' in the name show the results of this analysis for multiple time slices spanning the full trial, as in Churchland et al., 2010, Fig. 4c. They are included because the raw data used to generate them is too large to be uploaded, and so while they can't be regenerated from scratch, they are representative of all sessions. 
 
 ## `glm`
 
