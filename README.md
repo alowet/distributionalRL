@@ -1,6 +1,6 @@
 # distributionalRL
 
-This repo contains the code for generating figures in Lowet et al. (Nature, 2025). In order to run, it is also necessary to download the data from [Dryad](https://doi.org/10.5061/dryad.80gb5mm0m), which should be placed in a directory alongside the code folder as follows (this repo is equivalent to the `code` folder):
+This repo contains the code for generating figures in [Lowet et al., Nature, 2025](https://www.nature.com/articles/s41586-024-08488-5) [\[PDF\]](https://rdcu.be/eaxE1). In order to run, it is also necessary to download the data from [Dryad](https://doi.org/10.5061/dryad.80gb5mm0m), which should be placed in a directory alongside the code folder as follows (this repo is equivalent to the `code` folder):
 
 ```
 ├── parent_dir
